@@ -34,8 +34,21 @@ Apart from the silent generation of all.js/css it servers the cached copy if not
 
 See __helpers.php for more comments i.e "If don't want your css compressed".
 
-### What else?
+### and?
 
-Files are add to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js, helps with javascript if you want one library to come first that your code depends on.
+Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, helps with javascript if you want one library to come first that your code depends on.
 
-### Good luck.
+### Good luck, and don't forget to add Gziping for Css and Javascript to your .htaccess.
+
+```
+# GZIP COMPRESSION
+
+SetOutputFilter DEFLATE
+AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/x-javascript application/x-httpd-php
+BrowserMatch ^Mozilla/4 gzip-only-text/html
+BrowserMatch ^Mozilla/4\.0[678] no-gzip
+BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
+SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip
+Header append Vary User-Agent env=!dont-vary
+```
