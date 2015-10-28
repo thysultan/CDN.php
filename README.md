@@ -41,6 +41,8 @@ Files are added to all.js alphabetically, so if you name a file something like _
 ### Good luck, and don't forget to add Gziping for Css and Javascript to your .htaccess.
 
 ```
+//.htaccess
+
 # GZIP COMPRESSION
 
 SetOutputFilter DEFLATE
