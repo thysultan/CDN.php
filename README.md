@@ -10,6 +10,16 @@ A Tiny assets manager, that takes a folder and delivers minified combined assets
 <?php help()->assets('/assets/js/', 'all'); ?>
 ```
 
+### Output
+
+```html
+//Adds versions to the rendered link i.e
+
+<script src="/assets/js/all.js?v=$last-modified-time-stamp">
+<link href="/assets/css/all.css?v=$last-modified-time-stamp" rel="stylesheet">
+```
+
+
 ```
 // Example directory structure
 
@@ -46,6 +56,7 @@ See __helpers.php for more comments i.e "If don't want your css compressed".
 ### and?
 
 Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, helps with javascript if you want one library to come first that your code depends on.
+
 
 ### Good luck, and don't forget to add Gziping for Css and Javascript to your .htaccess.
 
