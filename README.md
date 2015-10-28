@@ -19,7 +19,7 @@ A Tiny assets manager, that takes a folder and delivers minified combined assets
 <link href="/assets/css/all.css?v=$last-modified-time-stamp" rel="stylesheet">
 ```
 
-#### Example directory structure
+###### Example directory structure
 
 ```
 
