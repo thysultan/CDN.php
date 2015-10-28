@@ -10,10 +10,19 @@ A Tiny assets manager, that takes a folder and delivers minified combined assets
 <?php help()->assets('/assets/js/', 'all'); ?>
 ```
 
-```javascript
+```
+// Example directory structure
+
 ---/assets/
 ----------/css/
+--------------/libs/
+--------------/style.scss
+--------------/plugins.scss
+
 ----------/js/
+--------------/libs/
+-------------------/___jquery.js
+--------------/main.js
 ```
 
 The first parameter i.e '/assets/css/' being the www path to the specific asset folder, the second being a list of files i.e
