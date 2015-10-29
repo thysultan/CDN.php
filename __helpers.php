@@ -83,8 +83,6 @@ class __Helpers{
      */
     private function compress( $buffer )
     {
-        return $buffer;
-
         // Remove comments
         $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
         // Remove space after colons
@@ -107,9 +105,10 @@ class __Helpers{
      * refresh minified version if true
      */
 
-    private function assetsUpdate($data)
+    private function save($data)
     {
         extract($data);
+
         $buffer      = '';
         $files       = array();
 
@@ -144,7 +143,6 @@ class __Helpers{
 
             foreach ($files as $key => $value)
             {
-
                 $ext  = explode( '.', $value );
                 $ext  = end($ext);
 
@@ -153,6 +151,7 @@ class __Helpers{
                 {
                     $buffer .= $this->_sass( file_get_contents($value) );
                 }
+
                 else
                 {
                     $buffer .= $this->compress( file_get_contents($value) );
@@ -213,9 +212,11 @@ class __Helpers{
                 $ext  = explode( '.', $file->getPathname() );
                 $ext  = end($ext);
 
-                // Treat sass and less files as css
-
-                if ( $file->isDir() || substr($file->getFileName(), 0, 1) == '.' || strpos($file,'minified') !== false )
+                if (
+                    $file->isDir() ||
+                    substr($file->getFileName(), 0, 1) == '.' ||
+                    strpos($file,'minified') !== false
+                    )
                 {
                     continue;
                 }
@@ -277,7 +278,7 @@ class __Helpers{
 
         if( !file_exists($minified['path']) )
         {
-            $this->assetsUpdate($data);
+            $this->save($data);
         }
 
         else
@@ -294,7 +295,7 @@ class __Helpers{
             // Render
             echo $html[$type];
 
-            $this->assetsUpdate($data);
+            $this->save($data);
         }
 
     }
