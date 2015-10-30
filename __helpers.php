@@ -173,7 +173,7 @@ class __Helpers{
     /**
      * Render Assets Link
      */
-    public function assets($dir, $args)
+    public function assets($dir, $args = 'all', $out = null)
     {
 
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
@@ -188,17 +188,19 @@ class __Helpers{
          * if 3rd last character is j then js file else css file
          */
 
-        $type = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
+        $type               = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
 
-            $dir = explode('/', $dir);
-                   unset($dir[count($dir)-2]);
+        $dir                = explode('/', $dir);
+                              unset($dir[count($dir)-2]);
 
-            $dir = implode('/', $dir);
+        $dir                = implode('/', $dir);
 
-            $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $dir);
-            $this->_WWW_ASSETS_ = $dir ;
+        $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $dir);
+        $this->_WWW_ASSETS_ = $dir;
 
-            $directory          = $this->_ASSETS_;
+        $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
+
+        $directory          = $this->_ASSETS_;
 
 
         // Include all files
@@ -240,23 +242,17 @@ class __Helpers{
 
 
         // Trim white space, make into array.
-        $args = preg_replace('/\s+/', '', $args);
-        $args = explode(',', $args );
+        $args   = preg_replace('/\s+/', '', $args);
+        $args   = explode(',', $args );
 
-
-        // Define source, output and minified links
         $source = array(
-            'path'   => $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $this->_ASSETS_),
-            'www'    => $dir,
-            'public' => array(
-                'path' => str_replace($type, '', $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir)),
-                'www'  => str_replace($type, '', $dir)
-            )
+            'path'  => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $out),
+            'www'   => str_replace($this->_BASE_ ,'', $out)
         );
 
         $output = array(
-            'path' => $source['public']['path'] . 'minified' . $this->_DS_,
-            'www'  => $source['public']['www'] . 'minified/'
+            'path' => $source['path'] . 'minified' . $this->_DS_,
+            'www'  => $source['www'] . 'minified/'
         );
 
         $minified = array(
@@ -269,35 +265,26 @@ class __Helpers{
             'args'     => $args,
             'minified' => $minified,
             'output'   => $output,
-            'source'   => $source,
             'dir'      => $dir,
             'type'     => $type,
             'ext'      => $ext
         );
 
 
-        if( !file_exists($minified['path']) )
-        {
-            $this->save($data);
-        }
+        // Saves if updated, doesn't if not
+        $this->save($data);
 
-        else
-        {
-            // Append ?v=time_last_updated for cache management
-            $minified['www'] .= '?v='.filemtime( $minified['path'] );
+        // Append ?v=time_last_updated for cache management
+        $minified['www'] .= '?v='.filemtime( $minified['path'] );
 
-            // Define html to append
-            $html = array(
-                    'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
-                    'js'  => '<script src="'. $minified['www'] .'"></script>'
-            );
+        // Define html to append
+        $html = array(
+                'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
+                'js'  => '<script src="'. $minified['www'] .'"></script>'
+        );
 
-            // Render
-            echo $html[$type];
-
-            $this->save($data);
-        }
-
+        // Render
+        echo $html[$type];
     }
 }
 
