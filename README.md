@@ -19,7 +19,7 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 
 // Specify different folder to save minified folder. default = first param + '/minified/'
 <?php help()->assets('/assets/css/', 'all', '/folder/to/save/minfied/'); ?>
-<?php help()->assets('/assets/js/', 'all' ''/folder/to/save/minfied/''); ?>
+<?php help()->assets('/assets/js/', 'all', '/folder/to/save/minfied/'); ?>
 ```
 
 ### Parameters 
