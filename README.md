@@ -1,6 +1,6 @@
 # cdn.php
 
-A Tiny assets manager, that takes a folder and delivers minified combined assets per type, works with css &amp; js
+A Tiny assets manager, that takes a folder and delivers minified & combined assets per type(css/js), works with css &amp; js & compiles .scss(sass) files.
 
 
 ### Usage
