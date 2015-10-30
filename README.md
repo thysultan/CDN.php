@@ -67,9 +67,9 @@ It does Sass, you can write .scss files and they will be evaluated at silent-run
 
 ### Performance?
 
-Apart from the silent generation of all.js/css it servers the cached copy if nothing has changed, and updates the cached copy behind the scene if something has.
+Apart from the generation of all.js/css it servers the cached copy if nothing has changed, and updates the cached copy only on the first request if something has.
 
-See __helpers.php for more comments i.e "If don't want your css compressed".
+See __helpers.php for more comments i.e "If you don't want your css compressed".
 
 ### and?
 
