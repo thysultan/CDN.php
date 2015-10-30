@@ -34,7 +34,7 @@ class __Helpers{
         $scss = new Compiler();
 
         /**
-         * If your into uncompressed css. uncomment the below
+         * If you're into uncompressed css. uncomment the below
          */
 
         // $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
