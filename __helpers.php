@@ -33,6 +33,7 @@ class __Helpers{
 
         $scss = new Compiler();
 
+
         /**
          * If your into uncompressed css. uncomment the below
          */
@@ -135,10 +136,10 @@ class __Helpers{
 
 
 
+
         // Refresh? create/update file
         if( $refresh['value'] === true )
         {
-
             foreach ($files as $key => $value)
             {
                 $ext  = explode( '.', $value );
@@ -258,8 +259,8 @@ class __Helpers{
 
         // Define source, output and minified links
         $source = array(
-            'path' => str_replace($type, '', $this->_BASE_ . $Dir),
-            'www'  => str_replace($type, '', $dir)
+            'path'  => str_replace(array('/', '\\'), $this->_DS_, $out),
+            'www'   => str_replace($this->_BASE_ ,'', $out)
         );
 
         $output = array(
@@ -281,7 +282,6 @@ class __Helpers{
             'dir'      => $dir,
             'type'     => $type
         );
-
 
 
         // Saves if updated, doesn't if not
