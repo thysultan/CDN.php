@@ -170,7 +170,7 @@ class __Helpers{
     /**
      * Render Assets Link
      */
-    public function assets($dir, $args)
+    public function assets($dir, $args = 'all', $out = null)
     {
 
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
@@ -196,8 +196,8 @@ class __Helpers{
             $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
             $this->_WWW_ASSETS_ = $dir ;
 
+            $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
             $directory          = $this->_ASSETS_;
-
 
         // Include all files
         if( $args === 'all' )
@@ -245,17 +245,13 @@ class __Helpers{
 
         // Define source, output and minified links
         $source = array(
-            'path'   => $this->_BASE_ . $this->_ASSETS_,
-            'www'    => $dir,
-            'public' => array(
-                'path' => str_replace($type, '', $this->_BASE_ . $Dir),
-                'www'  => str_replace($type, '', $dir)
-            )
+            'path' => str_replace($type, '', $this->_BASE_ . $Dir),
+            'www'  => str_replace($type, '', $dir)
         );
 
         $output = array(
-            'path' => $source['public']['path'] . 'minified' . $this->_DS_,
-            'www'  => $source['public']['www'] . 'minified/'
+            'path' => $source['path'] . 'minified' . $this->_DS_,
+            'www'  => $source['www'] . 'minified/'
         );
 
         $minified = array(
@@ -270,8 +266,7 @@ class __Helpers{
             'output'   => $output,
             'source'   => $source,
             'dir'      => $dir,
-            'type'     => $type,
-            'ext'      => $ext
+            'type'     => $type
         );
 
 
