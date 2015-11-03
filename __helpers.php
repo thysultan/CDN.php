@@ -233,12 +233,25 @@ class __Helpers{
 
             sort($files);
 
-            $args = implode(', ', $files);
+            $args = implode(',', $files);
+        }
+
+        else
+        {
+            $args = preg_replace('/\s+/', '', $args);
+            $args = explode(',', $args);
+
+            foreach ($args as $file)
+            {
+                $file    = $this->_ASSETS_ . $type . $this->_DS_ . $file;
+                $files[] = $file;
+            }
+
+            $args = implode(',', $files);
         }
 
 
         // Trim white space, make into array.
-        $args = preg_replace('/\s+/', '', $args);
         $args = str_replace(array('/', '\\'), $this->_DS_, $args);
         $args = explode(',', $args );
 
@@ -268,6 +281,7 @@ class __Helpers{
             'dir'      => $dir,
             'type'     => $type
         );
+
 
 
         // Saves if updated, doesn't if not
