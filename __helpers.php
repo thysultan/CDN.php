@@ -18,7 +18,7 @@ class __Helpers{
     private $_BASE;
 
     public function __construct() {
-        $this->_BASE_       = $_SERVER['DOCUMENT_ROOT'];
+        $this->_BASE_       = str_replace(array('/', '\\'), $this->_DS_, $_SERVER['DOCUMENT_ROOT']);
     }
 
 
@@ -34,7 +34,7 @@ class __Helpers{
         $scss = new Compiler();
 
         /**
-         * If you're into uncompressed css. uncomment the below
+         * If your into uncompressed css. uncomment the below
          */
 
         // $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
@@ -47,7 +47,7 @@ class __Helpers{
     /**
      * Pretty Print
      */
-    public function _print( $array, $type = 0 )
+    public function printP( $array, $type = 0 )
     {
         echo '<pre>';
 
@@ -120,8 +120,6 @@ class __Helpers{
 
         foreach ($args as $key => $value)
         {
-            $value = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $value);
-
             if( file_exists($value) )
             {
                 $files[] = $value;
@@ -169,11 +167,10 @@ class __Helpers{
 
     }
 
-
     /**
      * Render Assets Link
      */
-    public function assets($dir, $args = 'all', $out = null)
+    public function assets($dir, $args)
     {
 
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
@@ -188,19 +185,18 @@ class __Helpers{
          * if 3rd last character is j then js file else css file
          */
 
-        $type               = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
+        $type = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
 
-        $dir                = explode('/', $dir);
-                              unset($dir[count($dir)-2]);
+            $dir = explode('/', $dir);
+                   unset($dir[count($dir)-2]);
 
-        $dir                = implode('/', $dir);
+            $dir = implode('/', $dir);
+            $Dir = str_replace(array('/', '\\'), $this->_DS_, $dir);
 
-        $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $dir);
-        $this->_WWW_ASSETS_ = $dir;
+            $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
+            $this->_WWW_ASSETS_ = $dir ;
 
-        $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
-
-        $directory          = $this->_ASSETS_;
+            $directory          = $this->_ASSETS_;
 
 
         // Include all files
@@ -242,17 +238,24 @@ class __Helpers{
 
 
         // Trim white space, make into array.
-        $args   = preg_replace('/\s+/', '', $args);
-        $args   = explode(',', $args );
+        $args = preg_replace('/\s+/', '', $args);
+        $args = str_replace(array('/', '\\'), $this->_DS_, $args);
+        $args = explode(',', $args );
 
+
+        // Define source, output and minified links
         $source = array(
-            'path'  => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $out),
-            'www'   => str_replace($this->_BASE_ ,'', $out)
+            'path'   => $this->_BASE_ . $this->_ASSETS_,
+            'www'    => $dir,
+            'public' => array(
+                'path' => str_replace($type, '', $this->_BASE_ . $Dir),
+                'www'  => str_replace($type, '', $dir)
+            )
         );
 
         $output = array(
-            'path' => $source['path'] . 'minified' . $this->_DS_,
-            'www'  => $source['www'] . 'minified/'
+            'path' => $source['public']['path'] . 'minified' . $this->_DS_,
+            'www'  => $source['public']['www'] . 'minified/'
         );
 
         $minified = array(
@@ -265,6 +268,7 @@ class __Helpers{
             'args'     => $args,
             'minified' => $minified,
             'output'   => $output,
+            'source'   => $source,
             'dir'      => $dir,
             'type'     => $type,
             'ext'      => $ext
