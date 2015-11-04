@@ -85,7 +85,7 @@ class __Helpers{
     private function compress( $buffer )
     {
         // Remove comments
-        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
+        $buffer = preg_replace('@//.*|/\\*[\\s\\S]*?\\*/|(\"(\\\\.|[^\"])*\")@', '', $buffer);
         // Remove space after colons
         $buffer = str_replace( ': ', ':', $buffer );
         // Remove space before equal signs
@@ -94,7 +94,8 @@ class __Helpers{
         $buffer = str_replace( '= ', '=', $buffer );
         // Remove whitespace
         $buffer = str_replace( array("\r\n\r\n", "\n\n", "\r\r", '\t', '  ', '    ', '    '), '', $buffer );
-        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
+        // Remove new lines
+        $buffer = preg_replace( '/\s+/S', '', $buffer );
 
         return $buffer;
     }
@@ -138,7 +139,7 @@ class __Helpers{
 
 
         // Refresh? create/update file
-        if( $refresh['value'] === true )
+        if( $refresh['value'] = true )
         {
             foreach ($files as $key => $value)
             {
@@ -189,7 +190,7 @@ class __Helpers{
         $type = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
 
             $dir = explode('/', $dir);
-                   unset($dir[count($dir)-2]);
+                   unset( $dir[ count($dir)-2 ] );
 
             $dir = implode('/', $dir);
             $Dir = str_replace(array('/', '\\'), $this->_DS_, $dir);
@@ -256,11 +257,10 @@ class __Helpers{
         $args = str_replace(array('/', '\\'), $this->_DS_, $args);
         $args = explode(',', $args );
 
-
         // Define source, output and minified links
         $source = array(
             'path'  => str_replace(array('/', '\\'), $this->_DS_, $out),
-            'www'   => str_replace($this->_BASE_ ,'', $out)
+            'www'   => str_replace($this->_DS_, '/', str_replace($this->_BASE_ ,'', $out) )
         );
 
         $output = array(
