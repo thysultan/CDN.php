@@ -181,35 +181,61 @@ class __Helpers{
     /**
      * Render Assets Link
      */
-    public function assets($dir, $args = 'all', $out = null)
+    public function assets($dir = '', $args = 'all', $out = null)
     {
 
+        /**
+         * If not actual directory return;
+         */
+        if(
+            $dir === ''      ||
+            !is_string($dir) ||
+            !is_dir( $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir) )
+            )
+        {
+            throw new Exception("Directory Not Specified");
+        }
+
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
-
-        // If directory not specified or empty list, return;
-
-        if( !isset($dir) || $args === '' ) return false;
 
 
         /**
          * get type from last file name
          * if 3rd last character is j then js file else css file
          */
+        $dir  = explode('/', $dir);
+        $type = $dir[ count($dir)-2 ];
 
-        $type = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
+        if(
+            strpos($type, 'css')   !== false ||
+            strpos($type, 'style') !== false ||
+            strpos($type, 'sass')  !== false ||
+            strpos($type, 'scss')  !== false
+            )
+        {
+            $type = 'css';
+        }
 
-        $dir = explode('/', $dir);
-               unset( $dir[ count($dir)-2 ] );
+        else
+        {
+            $type = 'js';
+        }
 
-        $dir = implode('/', $dir);
-        $Dir = str_replace(array('/', '\\'), $this->_DS_, $dir);
+                              unset( $dir[ count($dir)-2 ] );
+
+        $dir                = implode('/', $dir);
+        $Dir                = str_replace(array('/', '\\'), $this->_DS_, $dir);
 
         $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
         $this->_WWW_ASSETS_ = $dir ;
 
         $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
 
-        // Include all files
+
+        /**
+         * Include all files if 'all'
+         * else only specified files.
+         */
         if( $args === 'all' )
         {
             $rii       = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->_ASSETS_));
@@ -257,11 +283,11 @@ class __Helpers{
         }
 
 
-        // replace '/' with native directory sep, make array.
+        // replace '/' with native directory '/' + make array.
         $args = str_replace(array('/', '\\'), $this->_DS_, $args);
         $args = explode(',', $args );
 
-        // Define source, output and minified links
+        // Define source, output and, minified links
         $source = array(
             'path'  => str_replace(array('/', '\\'), $this->_DS_, $out),
             'www'   => str_replace($this->_DS_, '/', str_replace($this->_BASE_ ,'', $out) )
@@ -278,6 +304,7 @@ class __Helpers{
             'www'  => $output['www'] . 'all.' . $type
         );
 
+        // Setup $data to be passed to ->save();
         $data = array(
             'args'     => $args,
             'minified' => $minified,
