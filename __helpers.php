@@ -135,35 +135,45 @@ class __Helpers{
         }
 
 
-
-
         // Refresh? create/update file
-        if( $refresh['value'] === true )
+        if( $refresh['value'] = true )
         {
-            foreach ($files as $key => $value)
+            try
             {
-                $ext  = explode( '.', $value );
-                $ext  = end($ext);
-
-                // Only runs once every update
-                if( $ext === 'scss' )
+                foreach ($files as $key => $value)
                 {
-                    $buffer .= $this->_sass( file_get_contents($value) );
+                    $ext  = explode( '.', $value );
+                    $ext  = end($ext);
+
+                    // Only runs once every update
+                    if( $ext === 'scss' )
+                    {
+                        $buffer .= $this->_sass( file_get_contents($value) );
+                    }
+
+                    else
+                    {
+                        $buffer .= $this->compress( file_get_contents($value) );
+                    }
                 }
 
-                else
+                // make dir if doesn't return
+                if( is_dir( $output['path'] ) === false )
                 {
-                    $buffer .= $this->compress( file_get_contents($value) );
+                    if( !mkdir( $output['path'] ) )
+                    {
+                        throw new Exception("Error Creating Minified Folder");
+                    }
+                }
+
+                if( !file_put_contents( $minified['path'], $buffer ) )
+                {
+                    throw new Exception("Error Creating all." .$type. " File");
                 }
             }
-
-            // make dir if doesn't return
-            if( is_dir( $output['path'] ) === false )
-            {
-                mkdir( $output['path'] );
+            catch (Exception $e) {
+                echo $e;
             }
-
-            file_put_contents( $minified['path'], $buffer );
         }
 
     }
