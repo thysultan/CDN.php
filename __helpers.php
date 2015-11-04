@@ -1,7 +1,9 @@
 <?php
 
 /**
- * Uncomment the below if you expect to write 20,000+ lines of sass code
+ * If you expect to write 20k+ lines of sass code per file
+ * the complier could timeout, uncomment the below to insure
+ * php has enough time and memory to parse 20k+ lines
  */
 
 // ini_set('memory_limit', '512M');      // 512 mb
@@ -35,9 +37,8 @@ class __Helpers{
 
 
         /**
-         * If your into uncompressed css. uncomment the below
+         * Want uncompressed css? uncomment the below
          */
-
         // $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
 
 
@@ -51,9 +52,7 @@ class __Helpers{
     public function printP( $array, $type = 0 )
     {
         echo '<pre>';
-
         ( $type === 1 ) ? var_dump( $array ) : print_r( $array );
-
         echo '</pre>';
     }
 
@@ -139,7 +138,7 @@ class __Helpers{
 
 
         // Refresh? create/update file
-        if( $refresh['value'] = true )
+        if( $refresh['value'] === true )
         {
             foreach ($files as $key => $value)
             {
@@ -189,22 +188,21 @@ class __Helpers{
 
         $type = ( substr($dir, -3, 1) === 'j' ) ? 'js' : 'css';
 
-            $dir = explode('/', $dir);
-                   unset( $dir[ count($dir)-2 ] );
+        $dir = explode('/', $dir);
+               unset( $dir[ count($dir)-2 ] );
 
-            $dir = implode('/', $dir);
-            $Dir = str_replace(array('/', '\\'), $this->_DS_, $dir);
+        $dir = implode('/', $dir);
+        $Dir = str_replace(array('/', '\\'), $this->_DS_, $dir);
 
-            $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
-            $this->_WWW_ASSETS_ = $dir ;
+        $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
+        $this->_WWW_ASSETS_ = $dir ;
 
-            $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
-            $directory          = $this->_ASSETS_;
+        $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
 
         // Include all files
         if( $args === 'all' )
         {
-            $rii       = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+            $rii       = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->_ASSETS_));
             $files     = array();
 
             foreach ($rii as $file)
@@ -227,10 +225,7 @@ class __Helpers{
                     continue;
                 }
 
-                $file = explode('/', $file->getPathname() );
-                $file = implode('/', $file);
-
-                $files[] = $file;
+                $files[] = $file->getPathname();
             }
 
             sort($files);
@@ -245,15 +240,14 @@ class __Helpers{
 
             foreach ($args as $file)
             {
-                $file    = $this->_ASSETS_ . $type . $this->_DS_ . $file;
-                $files[] = $file;
+                $files[] = $this->_ASSETS_ . $type . $this->_DS_ . $file;
             }
 
             $args = implode(',', $files);
         }
 
 
-        // Trim white space, make into array.
+        // replace '/' with native directory sep, make array.
         $args = str_replace(array('/', '\\'), $this->_DS_, $args);
         $args = explode(',', $args );
 
@@ -292,8 +286,8 @@ class __Helpers{
 
         // Define html to append
         $html = array(
-                'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
-                'js'  => '<script src="'. $minified['www'] .'"></script>'
+            'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
+            'js'  => '<script src="'. $minified['www'] .'"></script>'
         );
 
         // Render
