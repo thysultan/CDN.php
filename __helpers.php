@@ -6,8 +6,8 @@
  * php has enough time and memory to parse 20k+ lines
  */
 
-// ini_set('memory_limit', '512M');      // 512 mb
-// ini_set('max_execution_time', '300'); // 5 mins
+// ini_set('memory_limit', '128MB');      // 128MB
+// ini_set('max_execution_time', '150'); // 2.5 mins
 
 use Leafo\ScssPhp\Compiler;
 
@@ -136,44 +136,32 @@ class __Helpers{
 
 
         // Refresh? create/update file
-        if( $refresh['value'] = true )
+        if( $refresh['value'] === true )
         {
-            try
+            foreach ($files as $key => $value)
             {
-                foreach ($files as $key => $value)
+                $ext  = explode( '.', $value );
+                $ext  = end($ext);
+
+                // Only runs once every update
+                if( $ext === 'scss' )
                 {
-                    $ext  = explode( '.', $value );
-                    $ext  = end($ext);
-
-                    // Only runs once every update
-                    if( $ext === 'scss' )
-                    {
-                        $buffer .= $this->_sass( file_get_contents($value) );
-                    }
-
-                    else
-                    {
-                        $buffer .= $this->compress( file_get_contents($value) );
-                    }
+                    $buffer .= $this->_sass( file_get_contents($value) );
                 }
 
-                // make dir if doesn't return
-                if( is_dir( $output['path'] ) === false )
+                else
                 {
-                    if( !mkdir( $output['path'] ) )
-                    {
-                        throw new Exception("Error Creating Minified Folder");
-                    }
-                }
-
-                if( !file_put_contents( $minified['path'], $buffer ) )
-                {
-                    throw new Exception("Error Creating all." .$type. " File");
+                    $buffer .= $this->compress( file_get_contents($value) );
                 }
             }
-            catch (Exception $e) {
-                echo $e;
+
+            // make dir if doesn't return
+            if( is_dir( $output['path'] ) === false )
+            {
+                mkdir( $output['path'] );
             }
+
+            file_put_contents( $minified['path'], $buffer );
         }
 
     }
@@ -193,7 +181,8 @@ class __Helpers{
             !is_dir( $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir) )
             )
         {
-            throw new Exception("Directory Not Specified");
+            echo  '<!-- Error: Not an actual directory -->';
+            return;
         }
 
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
