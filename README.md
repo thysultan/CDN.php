@@ -6,23 +6,23 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 ### Usage
 
 ```php
-<?php help()->assets('/assets/css/', 'all'); ?>
-<?php help()->assets('/assets/js/', 'all'); ?>
+<?php assets('/assets/css/', 'all'); ?>
+<?php assets('/assets/js/', 'all'); ?>
 
-// Same as above, but a short hand
-<?php help()->assets('/assets/css/'); ?>
-<?php help()->assets('/assets/js/'); ?>
+// Same as above, (short hand)
+<?php assets('/assets/css/'); ?>
+<?php assets('/assets/js/'); ?>
 
 // List of files specifically
-<?php help()->assets('/assets/css/', 'main.css, header.scss'); ?>
-<?php help()->assets('/assets/js/', 'main.js, module.js'); ?>
+<?php assets('/assets/css/', 'main.css, header.scss'); ?>
+<?php assets('/assets/js/', 'main.js, module.js'); ?>
 
 // Specify different folder to save minified folder. default = first param + '/minified/'
-<?php help()->assets('/assets/css/', 'all', '/folder/to/save/minfied/'); ?>
-<?php help()->assets('/assets/js/', 'all', '/folder/to/save/minfied/'); ?>
+<?php assets('/assets/css/', 'all', '/folder/to/save/minfied/'); ?>
+<?php assets('/assets/js/', 'all', '/folder/to/save/minfied/'); ?>
 ```
 
-### Parameters 
+### Parameters
 
 1. Location to assets folder i.e for css it could be '/assets/css/' **(required)
 2. 'all' or a list of files seperated by (,) comma or left blank(defaults 'all'). **(optional)

@@ -1,17 +1,8 @@
 <?php
 
-/**
- * If you expect to write 20k+ lines of sass code per file
- * the complier could timeout, uncomment the below to insure
- * php has enough time and memory to parse 20k+ lines
- */
-
-// ini_set('memory_limit', '128MB');      // 128MB
-// ini_set('max_execution_time', '150'); // 2.5 mins
-
 use Leafo\ScssPhp\Compiler;
 
-class __Helpers{
+class __Assets{
 
     private $_DS_ = DIRECTORY_SEPARATOR;
 
@@ -25,7 +16,7 @@ class __Helpers{
 
 
     /**
-     * Sass/Scss compiler
+     * sass compiler
      */
     private function _sass($css)
     {
@@ -35,51 +26,12 @@ class __Helpers{
 
         $scss = new Compiler();
 
-
-        /**
-         * Want uncompressed css? uncomment the below
-         */
-        // $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
-
-
         return $scss->compile($css);
     }
 
 
     /**
-     * Pretty Print
-     */
-    public function printP( $array, $type = 0 )
-    {
-        echo '<pre>';
-        ( $type === 1 ) ? var_dump( $array ) : print_r( $array );
-        echo '</pre>';
-    }
-
-
-    /**
-     * Do A Quick Benchmark Tests
-     */
-    public function benchmark( $funcName, $value )
-    {
-        $numCycles  = 10000;
-        $time_start = microtime( true );
-
-        for ( $i = 0; $i < $numCycles; $i++ )
-        {
-            clearstatcache();
-            $funcName( $value );
-        }
-
-        $time_end   = microtime(true);
-        $time       = $time_end - $time_start;
-
-        echo "<pre> $funcName x $numCycles = $time seconds </pre>\n";
-    }
-
-
-    /**
-     * Compress Buffer
+     * compress Buffer
      */
     private function compress( $buffer )
     {
@@ -101,9 +53,7 @@ class __Helpers{
 
 
     /**
-     * Loop through files,
-     * check if minified version is older than file
-     * refresh minified version if true
+     * loop through files, check minified version age > file refresh minified if true
      */
 
     private function save($data)
@@ -135,7 +85,7 @@ class __Helpers{
         }
 
 
-        // Refresh? create/update file
+        // refresh? create/update file
         if( $refresh['value'] === true )
         {
             foreach ($files as $key => $value)
@@ -143,7 +93,7 @@ class __Helpers{
                 $ext  = explode( '.', $value );
                 $ext  = end($ext);
 
-                // Only runs once every update
+                // only runs once every update
                 if( $ext === 'scss' )
                 {
                     $buffer .= $this->_sass( file_get_contents($value) );
@@ -167,13 +117,13 @@ class __Helpers{
     }
 
     /**
-     * Render Assets Link
+     * Render assets link
      */
     public function assets($dir = '', $args = 'all', $out = null)
     {
 
         /**
-         * If not actual directory return;
+         * If not actual directory? return;
          */
         if(
             $dir === ''      ||
@@ -188,10 +138,7 @@ class __Helpers{
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
 
 
-        /**
-         * get type from last file name
-         * if 3rd last character is j then js file else css file
-         */
+        // Get file type
         $dir  = explode('/', $dir);
         $type = $dir[ count($dir)-2 ];
 
@@ -222,8 +169,7 @@ class __Helpers{
 
 
         /**
-         * Include all files if 'all'
-         * else only specified files.
+         * Include all files if 'all' else specified files.
          */
         if( $args === 'all' )
         {
@@ -244,7 +190,7 @@ class __Helpers{
                     continue;
                 }
 
-                // If it's a file that is not of the same type, continue
+                // if it's a file that is not of the same type, continue
                 if( strpos($ext, $type) === false )
                 {
                     continue;
@@ -276,7 +222,7 @@ class __Helpers{
         $args = str_replace(array('/', '\\'), $this->_DS_, $args);
         $args = explode(',', $args );
 
-        // Define source, output and, minified links
+        // define source, output and, minified links
         $source = array(
             'path'  => str_replace(array('/', '\\'), $this->_DS_, $out),
             'www'   => str_replace($this->_DS_, '/', str_replace($this->_BASE_ ,'', $out) )
@@ -293,7 +239,7 @@ class __Helpers{
             'www'  => $output['www'] . 'all.' . $type
         );
 
-        // Setup $data to be passed to ->save();
+        // setup $data to be passed to ->save();
         $data = array(
             'args'     => $args,
             'minified' => $minified,
@@ -304,28 +250,30 @@ class __Helpers{
         );
 
 
-        // Saves if updated, doesn't if not
+        // saves if updated, doesn't if not
         $this->save($data);
 
-        // Append ?v=time_last_updated for cache management
+        // append ?v=time_last_updated for cache management
         $minified['www'] .= '?v='.filemtime( $minified['path'] );
 
-        // Define html to append
+        // define html to append
         $html = array(
             'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
             'js'  => '<script src="'. $minified['www'] .'"></script>'
         );
 
-        // Render
+        // render
         echo $html[$type];
     }
+
 }
 
-/**
- * Exposes helpers to all
- */
 
-function help(){
-    $helpers = new __Helpers();
-    return $helpers;
+/**
+ * Expose helpers
+ */
+function assets($dir = '', $args = 'all', $out = null)
+{
+    $helpers = new __Assets();
+    $helpers->assets($dir, $args, $out);
 }
