@@ -36,7 +36,7 @@ class __Assets{
     private function compress( $buffer )
     {
         // Remove comments
-        $buffer = preg_replace('@//.*|/\\*[\\s\\S]*?\\*/|(\"(\\\\.|[^\"])*\")@', '', $buffer);
+        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
         // Remove space after colons
         $buffer = str_replace( ': ', ':', $buffer );
         // Remove space before equal signs
@@ -46,7 +46,7 @@ class __Assets{
         // Remove whitespace
         $buffer = str_replace( array("\r\n\r\n", "\n\n", "\r\r", '\t', '  ', '    ', '    '), '', $buffer );
         // Remove new lines
-        $buffer = preg_replace( '/\s+/S', '', $buffer );
+        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
 
         return $buffer;
     }
@@ -199,7 +199,24 @@ class __Assets{
                 $files[] = $file->getPathname();
             }
 
-            sort($files);
+            if($type === 'js')
+            {
+                // Comparison function
+                function cmp($a, $b) {
+                    $a = strtolower($a);
+                    $b = strtolower($b);
+
+                    if ($a == $b) return 0;
+                    return ($a < $b) ? -1 : 1;
+                }
+
+                uasort($files, 'cmp');
+            }
+
+            else
+            {
+                sort($files);
+            }
 
             $args = implode(',', $files);
         }
