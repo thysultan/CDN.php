@@ -317,38 +317,6 @@ class __Assets{
 function assets($dir = '', $args = 'all', $out = null, $minify = true)
 {
     $helpers = new __Assets();
+<<<<<<< HEAD
     $helpers->assets($dir, $args, $out, $minify);
-}
-
-
-function config( $key = null, $value = null )
-{
-    $base = new Base();
-    return $base->config( $key, $value );
-}
-
-
-function prettyPrint( $array, $type = 0 )
-{
-    echo '<pre>';
-    ( $type === 1 ) ? var_dump( $array ) : print_r( $array );
-    echo '</pre>';
-}
-
-
-function benchmarkTest( $funcName, $value )
-{
-    $numCycles  = 10000;
-    $time_start = microtime( true );
-
-    for ( $i = 0; $i < $numCycles; $i++ )
-    {
-        clearstatcache();
-        $funcName( $value );
-    }
-
-    $time_end   = microtime(true);
-    $time       = $time_end - $time_start;
-
-    echo "<pre> $funcName x $numCycles = $time seconds </pre>\n";
 }
