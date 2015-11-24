@@ -8,23 +8,35 @@ class __Assets{
 
     private $_ASSETS_;
     private $_WWW_ASSETS_;
-    private $_BASE;
+    private $_BASE_;
+    private $_ROOT_;
 
     public function __construct() {
-        $this->_BASE_       = str_replace(array('/', '\\'), $this->_DS_, $_SERVER['DOCUMENT_ROOT']);
+        $base = str_replace(array('/', '\\'), $this->_DS_, $_SERVER['DOCUMENT_ROOT']);
+
+        $folder = explode('/', $_SERVER["PHP_SELF"]);
+                  array_pop($folder);
+        $folder = implode('/', $folder);
+        
+        $this->_BASE_ = $base . $folder;
+        $this->_ROOT_ = $base;
     }
 
 
     /**
      * sass compiler
      */
-    private function _sass($css)
+    private function _sass($css, $extended = null)
     {
         if ( class_exists( 'scssc', false ) ) return false;
 
         include_once '__sass.php';
 
         $scss = new Compiler();
+        
+        if($extended){
+            $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
+        }
 
         return $scss->compile($css);
     }
@@ -36,7 +48,7 @@ class __Assets{
     private function compress( $buffer )
     {
         // Remove comments
-        $buffer = preg_replace('@//.*|/\\*[\\s\\S]*?\\*/|(\"(\\\\.|[^\"])*\")@', '', $buffer);
+        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
         // Remove space after colons
         $buffer = str_replace( ': ', ':', $buffer );
         // Remove space before equal signs
@@ -46,7 +58,7 @@ class __Assets{
         // Remove whitespace
         $buffer = str_replace( array("\r\n\r\n", "\n\n", "\r\r", '\t', '  ', '    ', '    '), '', $buffer );
         // Remove new lines
-        $buffer = preg_replace( '/\s+/S', '', $buffer );
+        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
 
         return $buffer;
     }
@@ -60,7 +72,10 @@ class __Assets{
     {
         extract($data);
 
-        $buffer      = '';
+        $buffer      = array(
+            'source'   => '',
+            'minified' => ''
+        );
         $files       = array();
 
         // If this changes then we refresh the minified copy.
@@ -96,12 +111,14 @@ class __Assets{
                 // only runs once every update
                 if( $ext === 'scss' )
                 {
-                    $buffer .= $this->_sass( file_get_contents($value) );
+                    $buffer['source']   .= $this->_sass( file_get_contents( $value ), true );
+                    $buffer['minified'] .= $this->_sass( file_get_contents( $value ) );
                 }
 
                 else
                 {
-                    $buffer .= $this->compress( file_get_contents($value) );
+                    $buffer['source']   .= file_get_contents( $value );
+                    $buffer['minified'] .= $this->compress( file_get_contents( $value ) );
                 }
             }
 
@@ -110,8 +127,12 @@ class __Assets{
             {
                 mkdir( $output['path'] );
             }
-
-            file_put_contents( $minified['path'], $buffer );
+            
+            // Save minified file 'all.min.ext'
+            file_put_contents( $minified['path'], $buffer['minified'] );
+            
+            // Save unminified file 'all.ext'
+            file_put_contents( str_replace('min.', '', $minified['path']), $buffer['source'] );
         }
 
     }
@@ -119,9 +140,9 @@ class __Assets{
     /**
      * Render assets link
      */
-    public function assets($dir = '', $args = 'all', $out = null)
+    public function assets($dir, $args, $out, $minify)
     {
-
+        if($args === null) $args = 'all';
         /**
          * If not actual directory? return;
          */
@@ -199,7 +220,24 @@ class __Assets{
                 $files[] = $file->getPathname();
             }
 
-            sort($files);
+            if($type === 'js')
+            {
+                // Comparison function
+                function cmp($a, $b) {
+                    $a = strtolower($a);
+                    $b = strtolower($b);
+
+                    if ($a == $b) return 0;
+                    return ($a < $b) ? -1 : 1;
+                }
+
+                uasort($files, 'cmp');
+            }
+
+            else
+            {
+                sort($files);
+            }
 
             $args = implode(',', $files);
         }
@@ -225,7 +263,7 @@ class __Assets{
         // define source, output and, minified links
         $source = array(
             'path'  => str_replace(array('/', '\\'), $this->_DS_, $out),
-            'www'   => str_replace($this->_DS_, '/', str_replace($this->_BASE_ ,'', $out) )
+            'www'   => str_replace($this->_DS_, '/', str_replace($this->_ROOT_ ,'', $out) )
         );
 
         $output = array(
@@ -234,9 +272,9 @@ class __Assets{
         );
 
         $minified = array(
-            'time' => ( file_exists( $output['path'] . 'all.'.$type ) ) ? filemtime( $output['path'].'all.'.$type ) : null ,
-            'path' => $output['path'] . 'all.' . $type,
-            'www'  => $output['www'] . 'all.' . $type
+            'time' => ( file_exists( $output['path'] . 'all.min.'.$type ) ) ? filemtime( $output['path'].'all.min.'.$type ) : null ,
+            'path' => $output['path'] . 'all.min.' . $type,
+            'www'  => $output['www'] . 'all.min.' . $type
         );
 
         // setup $data to be passed to ->save();
@@ -255,13 +293,17 @@ class __Assets{
 
         // append ?v=time_last_updated for cache management
         $minified['www'] .= '?v='.filemtime( $minified['path'] );
+        
+        if( $minify !== true ){
+            $minified['www'] = str_replace('min.', '', $minified['www']); 
+        }
 
         // define html to append
         $html = array(
-            'css' => '<link  href="'. $minified['www'] .'" rel="stylesheet">',
+            'css' => '<link href="'. $minified['www'] .'" rel="stylesheet">',
             'js'  => '<script src="'. $minified['www'] .'"></script>'
         );
-
+        
         // render
         echo $html[$type];
     }
@@ -272,8 +314,41 @@ class __Assets{
 /**
  * Expose helpers
  */
-function assets($dir = '', $args = 'all', $out = null)
+function assets($dir = '', $args = 'all', $out = null, $minify = true)
 {
     $helpers = new __Assets();
-    $helpers->assets($dir, $args, $out);
+    $helpers->assets($dir, $args, $out, $minify);
+}
+
+
+function config( $key = null, $value = null )
+{
+    $base = new Base();
+    return $base->config( $key, $value );
+}
+
+
+function prettyPrint( $array, $type = 0 )
+{
+    echo '<pre>';
+    ( $type === 1 ) ? var_dump( $array ) : print_r( $array );
+    echo '</pre>';
+}
+
+
+function benchmarkTest( $funcName, $value )
+{
+    $numCycles  = 10000;
+    $time_start = microtime( true );
+
+    for ( $i = 0; $i < $numCycles; $i++ )
+    {
+        clearstatcache();
+        $funcName( $value );
+    }
+
+    $time_end   = microtime(true);
+    $time       = $time_end - $time_start;
+
+    echo "<pre> $funcName x $numCycles = $time seconds </pre>\n";
 }
