@@ -6,12 +6,13 @@ class __Assets{
     private $_ds, $_assets, $_base, $_root, $error, $type;
 
     public function __construct() {
+        $this->_ds   = DIRECTORY_SEPARATOR;
+        
         $base        = str_replace(array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT']);
         $folder      = explode('/', $_SERVER["PHP_SELF"]);
                        array_pop($folder);
         $folder      = implode('/', $folder);
         
-        $this->_ds   = DIRECTORY_SEPARATOR;
         $this->_base = $base . $folder;
         $this->_root = $base;
     }
