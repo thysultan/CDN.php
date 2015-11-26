@@ -20,6 +20,10 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 // Specify different folder to save minified folder. default = first param + '/minified/'
 <?php assets('/assets/css/', 'all', '/folder/to/save/minfied/'); ?>
 <?php assets('/assets/js/', 'all', '/folder/to/save/minfied/'); ?>
+
+// Unminified
+<?php assets('/assets/css/',null,null,false); ?>
+<?php assets('/assets/js/',null,null,false); ?>
 ```
 
 ### Parameters
@@ -59,7 +63,8 @@ The first parameter i.e '/assets/css/' being the www path to the specific asset 
 
 ### What does it do?
 
-given '/assets/css/' it looks for all files in the specified directory, minifies them and combines them into one all.js or all.css.
+given '/assets/css/' it looks for all files in the specified directory, minifies them and combines them into one all.min.js/all.min.css
+& all.js/all.css.
 
 ### What else?
 
@@ -67,9 +72,8 @@ It does Sass, you can write .scss files and they will be evaluated at silent-run
 
 ### Performance?
 
-Apart from the generation of all.js/css it servers the cached copy if nothing has changed, and updates the cached copy only on the first request if something has.
+Apart from the generation of all.js/css files it serves the cached copy if nothing has changed, and updates the cached copy only on the first request if something has.
 
-See __helpers.php for more comments i.e "If you don't want your css compressed".
 
 ### and?
 
