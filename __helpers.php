@@ -7,9 +7,11 @@ class __Assets{
     private $_DS_ = DIRECTORY_SEPARATOR;
 
     private $_ASSETS_;
-    private $_WWW_ASSETS_;
     private $_BASE_;
     private $_ROOT_;
+    
+    private $error;
+    private $type;
 
     public function __construct() {
         $base = str_replace(array('/', '\\'), $this->_DS_, $_SERVER['DOCUMENT_ROOT']);
@@ -57,8 +59,20 @@ class __Assets{
         $buffer = str_replace( '= ', '=', $buffer );
         // Remove whitespace
         $buffer = str_replace( array("\r\n\r\n", "\n\n", "\r\r", '\t', '  ', '    ', '    '), '', $buffer );
+        
+        
         // Remove new lines
-        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
+        if( $this->type === 'css' )
+        {
+            // css
+            $buffer = preg_replace( '/\s+/S', '', $buffer );
+        }
+        
+        else{
+            // js
+            $buffer = preg_replace( '/\s+/S', ' ', $buffer );
+        }
+        
 
         return $buffer;
     }
@@ -98,10 +112,10 @@ class __Assets{
                 }
             }
         }
-
-
+        
+        
         // refresh? create/update file
-        if( $refresh['value'] === true )
+        if( $refresh['value'] = true )
         {
             foreach ($files as $key => $value)
             {
@@ -128,11 +142,20 @@ class __Assets{
                 mkdir( $output['path'] );
             }
             
-            // Save minified file 'all.min.ext'
-            file_put_contents( $minified['path'], $buffer['minified'] );
+            if( is_writable( $minified['path']) )
+            {
+                // Save minified file 'all.min.ext'
+                file_put_contents( $minified['path'], $buffer['minified'] );
+                
+                // Save unminified file 'all.ext'
+                file_put_contents( str_replace('min.', '', $minified['path']), $buffer['source'] );
+            }
             
-            // Save unminified file 'all.ext'
-            file_put_contents( str_replace('min.', '', $minified['path']), $buffer['source'] );
+            else
+            {   
+                $this->error = "<!-- Error: could note save ^^ type: permissions error; -->";
+            }
+
         }
 
     }
@@ -152,7 +175,7 @@ class __Assets{
             !is_dir( $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir) )
             )
         {
-            echo  '<!-- Error: Not an actual directory -->';
+            echo '<!-- Error: Not an actual directory -->';
             return;
         }
 
@@ -161,31 +184,28 @@ class __Assets{
 
         // Get file type
         $dir  = explode('/', $dir);
-        $type = $dir[ count($dir)-2 ];
+        $this->type = $dir[ count($dir)-2 ];
 
         if(
-            strpos($type, 'css')   !== false ||
-            strpos($type, 'style') !== false ||
-            strpos($type, 'sass')  !== false ||
-            strpos($type, 'scss')  !== false
+            strpos($this->type, 'css')   !== false ||
+            strpos($this->type, 'style') !== false ||
+            strpos($this->type, 'sass')  !== false ||
+            strpos($this->type, 'scss')  !== false
             )
         {
-            $type = 'css';
+            $this->type = 'css';
         }
 
         else
         {
-            $type = 'js';
+            $this->type = 'js';
         }
 
                               unset( $dir[ count($dir)-2 ] );
 
         $dir                = implode('/', $dir);
         $Dir                = str_replace(array('/', '\\'), $this->_DS_, $dir);
-
         $this->_ASSETS_     = $this->_BASE_ . str_replace(array('/', '\\'), $this->_DS_, $dir);
-        $this->_WWW_ASSETS_ = $dir ;
-
         $out                = ( $out !== null ) ? $this->_BASE_.$out : $this->_ASSETS_;
 
 
@@ -194,7 +214,7 @@ class __Assets{
          */
         if( $args === 'all' )
         {
-            $rii       = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->_ASSETS_));
+            $rii       = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $this->_ASSETS_ ) );
             $files     = array();
 
             foreach ($rii as $file)
@@ -212,7 +232,7 @@ class __Assets{
                 }
 
                 // if it's a file that is not of the same type, continue
-                if( strpos($ext, $type) === false )
+                if( strpos($ext, $this->type) === false )
                 {
                     continue;
                 }
@@ -220,7 +240,7 @@ class __Assets{
                 $files[] = $file->getPathname();
             }
 
-            if($type === 'js')
+            if($this->type === 'js')
             {
                 // Comparison function
                 function cmp($a, $b) {
@@ -249,7 +269,7 @@ class __Assets{
 
             foreach ($args as $file)
             {
-                $files[] = $this->_ASSETS_ . $type . $this->_DS_ . $file;
+                $files[] = $this->_ASSETS_ . $this->type . $this->_DS_ . $file;
             }
 
             $args = implode(',', $files);
@@ -272,9 +292,9 @@ class __Assets{
         );
 
         $minified = array(
-            'time' => ( file_exists( $output['path'] . 'all.min.'.$type ) ) ? filemtime( $output['path'].'all.min.'.$type ) : null ,
-            'path' => $output['path'] . 'all.min.' . $type,
-            'www'  => $output['www'] . 'all.min.' . $type
+            'time' => ( file_exists( $output['path'] . 'all.min.'.$this->type ) ) ? filemtime( $output['path'].'all.min.'.$this->type ) : null ,
+            'path' => $output['path'] . 'all.min.' . $this->type,
+            'www'  => $output['www'] . 'all.min.' . $this->type
         );
 
         // setup $data to be passed to ->save();
@@ -284,7 +304,7 @@ class __Assets{
             'output'   => $output,
             'source'   => $source,
             'dir'      => $dir,
-            'type'     => $type
+            'type'     => $this->type
         );
 
 
@@ -305,18 +325,15 @@ class __Assets{
         );
         
         // render
-        echo $html[$type];
+        echo $html[$this->type] . '
+';
+
+        if( $this->error ){
+            $this->error = $this->error."
+";
+        
+            echo $this->error;
+        }
     }
 
-}
-
-
-/**
- * Expose helpers
- */
-function assets($dir = '', $args = 'all', $out = null, $minify = true)
-{
-    $helpers = new __Assets();
-<<<<<<< HEAD
-    $helpers->assets($dir, $args, $out, $minify);
 }
