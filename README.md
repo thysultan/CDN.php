@@ -43,17 +43,18 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 .
 ├─── index.php
 ├─── assets
-│    ├── images
-│    ├── css
-|	|	|── style.css
-│    |   └── libs
-|	|		└── library.css
-│    └── js
-|		|── scripts.js
-│        └── libs
+│   ├── images
+│   ├── css
+|   |   |── style.css
+│   |   └── libs
+|   |		└── library.css
+│   └── js
+|       |── scripts.js
+│       └── libs
  			└── library.js
-
 ```
+
+
 
 The first parameter i.e '/assets/css/' being the www path to the specific asset folder, the second being a list of files i.e
 
