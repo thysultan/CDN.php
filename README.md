@@ -41,21 +41,24 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 <link href="/assets/css/all.css?v=$last-modified-time-stamp" rel="stylesheet">
 ```
 
-###### Example directory structure
+#### Example directory structure
 
 ```
-
----/assets/
-----------/css/
---------------/libs/
---------------/style.scss
---------------/plugins.scss
-
-----------/js/
---------------/libs/
--------------------/___jquery.js
---------------/main.js
+.
+├─── index.php
+├─── assets
+│   ├── images
+│   ├── css
+|   |   |── style.css
+│   |   └── libs
+|   |		└── library.css
+│   └── js
+|       |── scripts.js
+│       └── libs
+ 			└── library.js
 ```
+
+
 
 The first parameter i.e '/assets/css/' being the www path to the specific asset folder, the second being a list of files i.e
 
