@@ -77,7 +77,7 @@ Apart from the generation of all.js/css files it serves the cached copy if nothi
 
 ### and?
 
-Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, helps with javascript if you want one library to come first that your code depends on.
+Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, helps with javascript if you want one library to come first that your code depends on. Also files ending with .min.ext, i.e *main.min.js* or *main.min.css*
 
 
 ### Good luck, and don't forget to add Gziping for Css and Javascript to your .htaccess.
