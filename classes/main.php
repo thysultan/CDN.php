@@ -105,6 +105,8 @@ class __Assets{
             
             '~',
             '?',
+            '+',
+            '-',
             '/',
             '*',
             '%',
@@ -186,35 +188,65 @@ class __Assets{
             }
 
             // make dir if doesn't return
-            if( is_dir( $output['path'] ) === false )
+            if( !is_dir( $output['path'] ) )
             {
-                mkdir( $output['path'] );
+                $oldumask = umask(0); 
+                
+                if( !@mkdir( $output['path'], 0777, true ) )
+                {
+                    $this->error .= "
+                    <!-- 
+                    
+                    ". 
+                    "Error: php could note create the 'minfied' folder in ".dirname(dirname( $minified['path'] ))."/,
+                    
+                    ". 
+                    "Fix: change permissions of the Folder '". dirname(dirname( $minified['path'] )).
+                    "'; 
+                    
+                    -->
+                    ";  
+                
+                    return;
+                }
+                
+                umask($oldumask);
             }
-            
-            if (is_writable($minified['path'])) 
+
+            if ( @fopen( $minified['path'], 'a' ) )
             {
+                $oldumask = umask(0); 
+                
                 // Save minified file 'all.min.ext'
                 file_put_contents( $minified['path'], $buffer['minified'] );
+                @chmod($minified['path'], 0777);
+                
+                
+                $minified['path'] = str_replace('min.', '', $minified['path']);
                 
                 // Save unminified file 'all.ext'
-                file_put_contents( str_replace('min.', '', $minified['path']), $buffer['source'] );
+                file_put_contents( $minified['path'], $buffer['source'] );
+                @chmod( $minified['path'], 0777);
+                
+                umask($oldumask);
             }
             else
             {
-              $this->error = "
-              <!-- 
-              
-              ". 
-              "Error: php could note save file; type: not writable/permissions,
-              
-              ". 
-              "Fix: change permissions of: '".$minified['path']."' 
-              
-              ".
-              "or the Folder '".dirname($minified['path']).
-              "'; 
-              
-              -->";  
+                $this->error .= "
+                    <!-- 
+                    
+                    ". 
+                    "Error: php could note save file; type: not writable/permissions,
+                    
+                    ". 
+                    "Fix: change permissions of: '".$minified['path']."' 
+                    
+                    ".
+                    "or the Folder '".dirname($minified['path']).
+                    "'; 
+                    
+                    -->
+                    ";  
             }
             
         }
@@ -381,7 +413,7 @@ class __Assets{
 
         // define html to append
         $html = array(
-            'css' => '<link href="' . $minified['www'] . '" rel="stylesheet">',
+            'css' => '<link rel="stylesheet" href="' . $minified['www'] . '">',
             'js'  => '<script src="' . $minified['www'] . '"></script>'
         );
         
