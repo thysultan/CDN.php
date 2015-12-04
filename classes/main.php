@@ -153,18 +153,11 @@ class __Assets{
                     $refresh['state'] = true;
                     $refresh['value'] = true;
                 }
-<<<<<<< HEAD:classess/__assets.php
 			}
 			
 		}
 		
 		 // refresh? create/update file
-=======
-            }
-        }
-        
-        // refresh? create/update file
->>>>>>> origin/master:__helpers.php
         if( $refresh['value'] === true )
         {
             foreach ( $files as $key => $value )
@@ -198,7 +191,7 @@ class __Assets{
                 mkdir( $output['path'] );
             }
             
-            if( is_writable( $minified['path']) )
+            if (is_writable($minified['path'])) 
             {
                 // Save minified file 'all.min.ext'
                 file_put_contents( $minified['path'], $buffer['minified'] );
@@ -207,10 +200,23 @@ class __Assets{
                 file_put_contents( str_replace('min.', '', $minified['path']), $buffer['source'] );
             }
             else
-            {   
-                $this->error = "<!-- Error: could note save file; type: permissions error; -->";
+            {
+              $this->error = "
+              <!-- 
+              
+              ". 
+              "Error: php could note save file; type: not writable/permissions,
+              
+              ". 
+              "Fix: change permissions of: '".$minified['path']."' 
+              
+              ".
+              "or the Folder '".dirname($minified['path']).
+              "'; 
+              
+              -->";  
             }
-
+            
         }
 
     }
@@ -365,7 +371,8 @@ class __Assets{
         $this->save($data);
 
         // append ?v=time_last_updated for cache management
-        $minified['www'] .= '?v=' . filemtime( $minified['path'] );
+        $ver              = ( !$this->error ) ? filemtime( $minified['path'] ) : null;
+        $minified['www'] .= '?v=' . $ver;
         
         if( $minify !== true )
         {
