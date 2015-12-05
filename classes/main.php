@@ -217,6 +217,11 @@ class __Assets{
             {
                 $oldumask = umask(0); 
                 
+                // Remove old files
+                $ext = ($ext !== 'js') ? 'css' : 'js';
+                $mask = $output['path'].'all*'.$ext;
+                array_map('unlink', glob($mask));
+                
                 // Save minified file 'all.min.ext'
                 file_put_contents( $minified['path'], $buffer['minified'] );
                 @chmod($minified['path'], 0777);
