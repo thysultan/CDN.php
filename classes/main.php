@@ -141,6 +141,21 @@ class __Assets{
 		$refresh['value']   = false;
         
         $files 				 = array();
+        $minify     = ( $minify ) ? 'min.' : '';
+        
+        $mask         = $output['path'].'*'.$type;
+        $file         = array();
+        $file['path'] = glob($mask);
+        
+        if( array_key_exists(0, $file['path']) === true ){
+            $file['path'] =  $file['path'][0];
+            $file['name'] = str_replace($this->output['path'], '', $file['path']);
+            
+            $this->output['name'] = $file['name'];
+        }else{
+            $this->output['name'] = 'all.' . time() . '.' . $type;
+        }
+        
         
         // loop: file paths in $args
 		foreach( $args as $key => $value )
@@ -148,9 +163,10 @@ class __Assets{
 			if( file_exists( $value ) )
 			{
 				$files[] = $value;
+                
 
                 // set state based on file difference.
-                if( $minified['time'] > filemtime($value) === false )
+                if( $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false )
                 {
                     $refresh['state'] = true;
                     $refresh['value'] = true;
@@ -212,26 +228,29 @@ class __Assets{
                 
                 umask($oldumask);
             }
+            
+            
+            $this->output['name'] = explode('.', $this->output['name']);
+            $this->output['name'] = $this->output['name'][0] . '.' . $minify .  time() . '.' . $this->output['name'][ count($this->output['name'])-1 ];
+            
+            $minified['path'] = $this->minified['path']( $this->output['path'], $this->output['name'] );
+            $minified['www']  = $this->minified['path']( $this->output['www'], $this->output['name'] );
 
-            if ( @fopen( $minified['path'], 'a' ) )
+            
+            if ( is_writable( dirname($minified['path']) ) )
             {
-                $oldumask = umask(0); 
+                $oldumask = umask(0);
                 
                 // Remove old files
-                $ext = ($ext !== 'js') ? 'css' : 'js';
-                $mask = $output['path'].'all*'.$ext;
-                array_map('unlink', glob($mask));
+                $mask = $output['path'].'*' . $type;
+                
+                foreach(glob($mask) as $file){
+                    unlink( realpath($file) );
+                }
                 
                 // Save minified file 'all.min.ext'
                 file_put_contents( $minified['path'], $buffer['minified'] );
                 @chmod($minified['path'], 0777);
-                
-                
-                $minified['path'] = str_replace('min.', '', $minified['path']);
-                
-                // Save unminified file 'all.ext'
-                file_put_contents( $minified['path'], $buffer['source'] );
-                @chmod( $minified['path'], 0777);
                 
                 umask($oldumask);
             }
@@ -376,29 +395,45 @@ class __Assets{
         $args = explode(',', $args );
 
         // define source, output and, minified links
-        $source = array(
+        $this->source = array(
             'path'  => str_replace(array('/', '\\'), $this->_ds, $out),
             'www'   => str_replace($this->_ds, '/', str_replace($this->_root ,'', $out) )
         );
 
-        $output = array(
-            'path' => $source['path'] . 'minified' . $this->_ds,
-            'www'  => $source['www'] . 'minified/',
+        $this->output = array(
+            'path' => $this->source['path'] . 'minified' . $this->_ds,
+            'www'  => $this->source['www'] . 'minified/',
             'name' => 'all.min' . '.' . $this->type
         );
 
-        $minified = array(
-            'time' => ( file_exists( $output['path'].$output['name'] ) ) ? filemtime( $output['path'] . $output['name'] ) : null ,
-            'path' => $output['path'] . $output['name'],
-            'www'  => $output['www'] . $output['name']
+        $this->minified = array(
+            'time' => function($path, $name){
+                if( file_exists( $path . $name ) ){
+                    return filemtime( $path . $name );
+                }else{
+                    return null;
+                }
+            },
+                        
+            'path' => function($path, $name){
+                return $path . $name;
+            },
+            
+            'www'  => function($www, $name){
+                return $www . $name;
+            }
         );
 
         // setup $data to be passed to ->save();
+        $minified = $this->reset();
+        
         $data = array(
             'args'     => $args,
+            
             'minified' => $minified,
-            'output'   => $output,
-            'source'   => $source,
+            'output'   => $this->output,
+            'source'   => $this->source,
+            'minify'   => $minify,
             'dir'      => $dir,
             'type'     => $this->type
         );
@@ -406,15 +441,8 @@ class __Assets{
 
         // saves if updated, doesn't if not
         $this->save($data);
-
-        // append ?v=time_last_updated for cache management
-        $ver              = ( !$this->error ) ? filemtime( $minified['path'] ) : null;
-        $minified['www'] .= '?v=' . $ver;
         
-        if( $minify !== true )
-        {
-            $minified['www'] = str_replace('min.', '', $minified['www']); 
-        }
+        $minified = $this->reset();
 
         // define html to append
         $html = array(
@@ -428,6 +456,13 @@ class __Assets{
         if( $this->error ){
             echo $this->error;
         }
+    }
+    
+    public function reset(){
+        $minified['path'] = $this->minified['path']( $this->output['path'], $this->output['name'] );
+        $minified['www']  = $this->minified['www']( $this->output['www'], $this->output['name'] );
+        
+        return $minified;
     }
 
 }
