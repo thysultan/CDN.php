@@ -12,12 +12,12 @@ class __Assets{
 		$base           = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
 		
 		// find assets folder
-        $folder         = explode( '/', $_SERVER["PHP_SELF"] );
+        $folder         = explode( '/', $_SERVER["SCRIPT_NAME"] );
                           array_pop( $folder );
 
         $folder         = implode( '/', $folder );
         
-		// config baseassets) & root(project) dir's
+		// config base(assets) & root(project) dir's
         $this->_base = $base . $folder;
         $this->_root = $base;
         
@@ -28,10 +28,11 @@ class __Assets{
      */
     private function _sass($css, $extended = null)
     {
-        include_once '__sass.php';
+        require_once '__sass.php';
 
         $scss = new Compiler();
         
+        // uncompressed formatting.
         if( $extended )
         {
             $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
@@ -49,70 +50,39 @@ class __Assets{
         // Remove comments
         $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
         
-        // Remove new lines		
+        // Remove new lines	etc	
 		$buffer = preg_replace( '/\s+/S', ' ', $buffer );
         
+        // Remove extra spacing between the following chars
         $opts = array(
-            ',',
-            ';',
-            ':',
+            ',', ';', ':',
             
-            '{',
-            '}',
+            '{', '}',
             
-            '[',
-            ']',
+            '[', ']',
+
+            '(', ')',
             
-            '(',
-            ')',
+            '=', '==', '===',
             
-            '=',
-            '==',
-            '===',
+            '!', '!=', '!==',
             
-            '!',
-            '!=',
-            '!==',
+            '||', '|',
             
-            '||',
-            '|',
-            
-            '&&',
-            '&',
+            '&&', '&',
             
             '^',
+
+            '*=', '+=', '-=', '/=', '&=', '^=', '|=',
             
-            '*=',
-            '+=',
-            '-=',
-            '/=',
-            '&=',
-            '^=',
-            '|=',
+            '<<', '>>', '>>>',
             
-            '<<',
-            '>>',
-            '>>>',
+            '<<=', '>>=', '>>>=',
             
-            '<<=',
-            '>>=',
-            '>>>=',
+            '<', '>', '<=', '>=',
             
-            '<',
-            '>',
-            '<=',
-            '>=',
-            
-            '~',
-            '?',
-            '+',
-            '-',
-            '/',
-            '*',
-            '%',
-            '**'
+            '~', '?', '+', '-', '/', '*', '%', '**'
         );
-        
         
         foreach($opts as $opt)
         {
@@ -124,7 +94,7 @@ class __Assets{
     }
 
     /**
-     * check if file has been updated: save.
+     * check if source files have been updated: update minified.
      */
     private function save($data)
     {
@@ -139,23 +109,30 @@ class __Assets{
 		$refresh 		    = array();
 		$refresh['state']   = false;
 		$refresh['value']   = false;
-        
+
         $files 				 = array();
+        
+        // To minify or not?
         $minify              = ( $minify ) ? 'min.' : '';
         
+        // Get current list of files in minified folder of same type
         $mask                = $output['path'].'*'.$type;
         $file                = array();
         $file['path']        = glob($mask);
         
+        // If not empty(the ^^ folder)
         if( array_key_exists(0, $file['path']) === true )
         {
-            $file['path']         =  $file['path'][0];
+            $file['path']         = $file['path'][0];
+            
+            // Get only the name of the file, remove the reset
             $file['name']         = str_replace($this->output['path'], '', $file['path']);
             
             $this->output['name'] = $file['name'];
         }
         else
         {
+            // We are creating this file for the first time.
             $this->output['name'] = 'all.' . time() . '.' . $type;
         }
         
@@ -166,9 +143,8 @@ class __Assets{
 			if( file_exists( $value ) )
 			{
 				$files[] = $value;
-                
 
-                // set state based on file difference.
+                // set state based on file difference
                 if( $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false )
                 {
                     $refresh['state'] = true;
@@ -178,22 +154,23 @@ class __Assets{
 			
 		}
 		
-		 // refresh? create/update file
+		 // refresh? create/update file once every update
         if( $refresh['value'] === true )
         {
             foreach ( $files as $key => $value )
             {
                 $ext       = explode( '.', $value );
                 
-                // Don't compress file if already minified.
+                // Don't compress file if already minified
                 $this->min = $ext[ count($ext)-2 ];
                 
+                // Get extension
                 $ext       = end($ext);
                 
+                // Get contents
                 $contents  = file_get_contents( $value );
                 
-
-                // once every update
+                // If sass file run through sass compiller
                 if( $ext === 'scss' )
                 {
                     $buffer['source']   .= $this->_sass( $contents, true );
@@ -206,9 +183,10 @@ class __Assets{
                 }
             }
 
-            // make dir if doesn't return
+            // make minified output dir' if it doesn't already exist
             if( !is_dir( $output['path'] ) )
             {
+                // Give dir 0777 permissions
                 $oldumask = umask(0); 
                 
                 if( !@mkdir( $output['path'], 0777, true ) )
@@ -232,27 +210,29 @@ class __Assets{
                 umask($oldumask);
             }
             
-            
+            // Construct name of minified file
             $this->output['name'] = explode('.', $this->output['name']);
-            $this->output['name'] = $this->output['name'][0] . '.' . $minify .  time() . '.' . $this->output['name'][ count($this->output['name'])-1 ];
+            $this->output['name'] = $this->output['name'][0] . '.' . 
+                                           $minify .  time() . '.' . 
+                                           $this->output['name'][ count($this->output['name'])-1 ];
             
+            // Update minified paths
             $minified['path'] = $this->minified['path']( $this->output['path'], $this->output['name'] );
             $minified['www']  = $this->minified['path']( $this->output['www'], $this->output['name'] );
 
-            
+            // Can we right to the minified dir'?
             if ( is_writable( dirname($minified['path']) ) )
             {
                 $oldumask = umask(0);
                 
-                // Remove old files
+                // Remove old files of same type
                 $mask = $output['path'].'*' . $type;
+                array_map('unlink', glob($mask));
                 
-                foreach(glob($mask) as $file){
-                    unlink( realpath($file) );
-                }
-                
-                // Save minified file 'all.min.ext'
+                // Save new/updated minified file 'all.min.ext'
                 file_put_contents( $minified['path'], $buffer['minified'] );
+                
+                //  Give 0777 permissions
                 @chmod($minified['path'], 0777);
                 
                 umask($oldumask);
@@ -285,12 +265,22 @@ class __Assets{
      */
     public function assets($dir, $args, $out, $minify)
     {
+        // default to 'all' files option
         if($args === null)
         {
             $args = 'all';
         }
         
-        // not actual directory?
+        /**
+         * Normalize input, if input does not end/start with / 
+           i.e /dirname -> /dirname/
+           i.e dirname/ -> /dirname/
+           i.e dirname  -> /dirname/
+         */
+        $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
+        $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
+        
+        // not an actual directory?
         if(
             $dir === ''      ||
             !is_string($dir) ||
@@ -301,7 +291,6 @@ class __Assets{
             return;
         }
         
-        $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
         $dir = explode('/', $dir);
         
         // set file type
@@ -309,7 +298,6 @@ class __Assets{
 
         if(
             strpos($this->type, 'css')   !== false ||
-            strpos($this->type, 'style') !== false ||
             strpos($this->type, 'sass')  !== false ||
             strpos($this->type, 'scss')  !== false
             )
@@ -328,87 +316,87 @@ class __Assets{
         $this->_assets  = $this->_base . str_replace( array( '/', '\\' ), $this->_ds, $dir );
         $out            = ( $out !== null ) ? $this->_base.$out : $this->_assets;
 
-        // include all files if 'all' else specific.
+        // include all files if 'all' or 'null': not set
         if( $args === 'all' || $args === null )
         {
+            // Get all files in directory/sub directories recursive operation
             $rii   = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $this->_assets ) );
             $files = array();
-
+            
+            // Loop through listed files
             foreach ($rii as $file)
             {
+                // Get file extension.
                 $ext = explode( '.', $file->getPathname() );
                 $ext = end($ext);
 
                 if(
+                    // File should not be directory
                     $file->isDir() ||
+                    
+                    // File should not start with '.'
                     substr($file->getFileName(), 0, 1) == '.' ||
-                    strpos($file,'minified') !== false
-                  )
+                    
+                    // File should not be in minified folder
+                    strpos($file,'minified') !== false ||
+                    
+                    // If it's a file that is not of the same type, continue
+                    strpos($ext, $this->type) === false
+                )
                 {
                     continue;
                 }
-
-                // if it's a file that is not of the same type, continue
-                if( strpos($ext, $this->type) === false )
-                {
-                    continue;
-                }
-
+                
+                // Build safe list of needed files
                 $files[] = $file->getPathname();
             }
-
-            if( $this->type === 'js' )
-            {
-                // Comparison function
-                function cmp($a, $b) 
-                {
-                    $a = strtolower($a);
-                    $b = strtolower($b);
-
-                    if ($a == $b) return 0;
-                    
-                    return ($a < $b) ? -1 : 1;
-                }
-
-                uasort($files, 'cmp');
-            }
-            else
-            {
-                sort($files);
-            }
-
-            $args = implode(',', $files);
+            
+            // Run custom sort function on file list
+            uasort($files, array($this, 'cmp'));
+            
+             $args = implode(',', $files);
         }
+        // else only specified files
         else
         {
+            // remove whitespace
             $args = preg_replace('/\s+/', '', $args);
+            
+            // Deconstruct file list in $args to array
             $args = explode(',', $args);
-
+            
+            // Loop through file list.
             foreach ($args as $file)
             {
+                // Create list of files
                 $files[] = $this->_assets . $this->type . $this->_ds . $file;
             }
-
+            
+            // Reconstruct args parts back together
             $args = implode(',', $files);
         }
 
 
-        // replace '/' with native directory '/' + make array.
+        // replace '/' with native directory '/' + make array
         $args = str_replace(array('/', '\\'), $this->_ds, $args);
+        
+        // Convert args back to array.
         $args = explode(',', $args );
 
-        // define source, output and, minified links
+        // define source: where the source files are
         $this->source = array(
             'path'  => str_replace(array('/', '\\'), $this->_ds, $out),
             'www'   => str_replace($this->_ds, '/', str_replace($this->_root ,'', $out) )
         );
-
+        
+        // define output: where the ouput will be, after compiling
         $this->output = array(
             'path' => $this->source['path'] . 'minified' . $this->_ds,
             'www'  => $this->source['www'] . 'minified/',
             'name' => 'all.min' . '.' . $this->type
         );
-
+        
+        // Where the minified files will be, system & www paths
         $this->minified = array(
             'time' => function($path, $name){
                 if( file_exists( $path . $name ) ){
@@ -427,9 +415,10 @@ class __Assets{
             }
         );
 
-        // setup $data to be passed to ->save();
+        // Set current $minified paths
         $minified = $this->reset();
         
+        // setup $data to be passed to ->save()
         $data = array(
             'args'     => $args,
             
@@ -445,27 +434,54 @@ class __Assets{
         // saves if updated, doesn't if not
         $this->save($data);
         
+        /** 
+         *  Update current $minified paths, 
+         *  hint: they where changed in $this->save()
+         */
         $minified = $this->reset();
 
-        // define html to append
+        // define html template to append.
         $html = array(
             'css' => '<link rel="stylesheet" href="' . $minified['www'] . '">',
-            'js'  => '<script src="' . $minified['www'] . '"></script>'
+            'js'  => '<script src="' .                 $minified['www'] . '"></script>'
         );
         
-        // render
+        // render html template.
         echo $html[$this->type];
-
-        if( $this->error ){
+        
+        /** 
+         *  If we have an error display that. 
+         *  hint: erros are in html comment style
+         *  <!-- error here -->
+         */
+        if( $this->error )
+        {
             echo $this->error;
         }
     }
     
-    public function reset(){
+    /**
+     * returns the minified paths
+     */
+    public function reset()
+    {
         $minified['path'] = $this->minified['path']( $this->output['path'], $this->output['name'] );
         $minified['www']  = $this->minified['www']( $this->output['www'], $this->output['name'] );
         
         return $minified;
+    }
+    
+    /**
+     * Comparison function: treat uppercase/lowercase the same
+     */
+    public function cmp($a, $b) 
+    {
+        $a = strtolower($a);
+        $b = strtolower($b);
+
+        if ($a == $b) return 0;
+        
+        return ($a < $b) ? -1 : 1;
     }
 
 }
