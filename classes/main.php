@@ -141,18 +141,21 @@ class __Assets{
 		$refresh['value']   = false;
         
         $files 				 = array();
-        $minify     = ( $minify ) ? 'min.' : '';
+        $minify              = ( $minify ) ? 'min.' : '';
         
-        $mask         = $output['path'].'*'.$type;
-        $file         = array();
-        $file['path'] = glob($mask);
+        $mask                = $output['path'].'*'.$type;
+        $file                = array();
+        $file['path']        = glob($mask);
         
-        if( array_key_exists(0, $file['path']) === true ){
-            $file['path'] =  $file['path'][0];
-            $file['name'] = str_replace($this->output['path'], '', $file['path']);
+        if( array_key_exists(0, $file['path']) === true )
+        {
+            $file['path']         =  $file['path'][0];
+            $file['name']         = str_replace($this->output['path'], '', $file['path']);
             
             $this->output['name'] = $file['name'];
-        }else{
+        }
+        else
+        {
             $this->output['name'] = 'all.' . time() . '.' . $type;
         }
         
