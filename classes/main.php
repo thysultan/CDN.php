@@ -3,9 +3,15 @@
 use Leafo\ScssPhp\Compiler;
 
 class __Assets{
-    private $_ds, $_assets, $_base, $_root, $error, $type;
+    private $_ds, 
+            $_assets, 
+            $_base, 
+            $_root, 
+            $error, 
+            $type;
 
-    public function __construct() {
+    public function __construct() 
+    {
 		$this->_ds 		= DIRECTORY_SEPARATOR;
 		
 		// get root dir
@@ -26,7 +32,10 @@ class __Assets{
     /**
      * sass compiler
      */
-    private function _sass($css, $extended = null)
+    private function _sass(
+        $css, 
+        $extended = null
+    )
     {
         require_once '__sass.php';
 
@@ -45,7 +54,7 @@ class __Assets{
     /**
      * compress Buffer
      */
-    private function compress( $buffer )
+    private function compress($buffer)
     {   
         // Remove comments
         $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
@@ -137,8 +146,8 @@ class __Assets{
         }
         
         
-        // loop: file paths in $args
-		foreach( $args as $key => $value )
+        // loop: file paths in $include
+		foreach( $include as $key => $value )
 		{
 			if( file_exists( $value ) )
 			{
@@ -263,12 +272,18 @@ class __Assets{
     /**
      * Render assets link
      */
-    public function assets($dir, $args, $out, $minify)
+    public function assets(
+        $dir, 
+        $include,
+        $exclude,
+        $out, 
+        $minify
+    )
     {
         // default to 'all' files option
-        if($args === null)
+        if($include === null)
         {
-            $args = 'all';
+            $include = 'all';
         }
         
         /**
@@ -317,7 +332,7 @@ class __Assets{
         $out            = ( $out !== null ) ? $this->_base.$out : $this->_assets;
 
         // include all files if 'all' or 'null': not set
-        if( $args === 'all' || $args === null )
+        if( $include === 'all' || $include === null )
         {
             // Get all files in directory/sub directories recursive operation
             $rii   = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $this->_assets ) );
@@ -354,34 +369,52 @@ class __Assets{
             // Run custom sort function on file list
             uasort($files, array($this, 'cmp'));
             
-             $args = implode(',', $files);
+            $include = implode(',', $files);
         }
         // else only specified files
         else
         {
             // remove whitespace
-            $args = preg_replace('/\s+/', '', $args);
+            $include = preg_replace('/\s+/', '', $include);
             
-            // Deconstruct file list in $args to array
-            $args = explode(',', $args);
+            // Deconstruct file list in $include to array
+            $include = explode(',', $include);
             
             // Loop through file list.
-            foreach ($args as $file)
+            foreach ($include as $file)
             {
                 // Create list of files
                 $files[] = $this->_assets . $this->type . $this->_ds . $file;
             }
             
             // Reconstruct args parts back together
-            $args = implode(',', $files);
+            $include = implode(',', $files);
         }
 
 
         // replace '/' with native directory '/' + make array
-        $args = str_replace(array('/', '\\'), $this->_ds, $args);
+        $include = str_replace(array('/', '\\'), $this->_ds, $include);
         
         // Convert args back to array.
-        $args = explode(',', $args );
+        $include = explode(',', $include);
+        
+        // Exclude specified files/folders if set
+        if($exclude)
+        {
+            $exclude = preg_replace('/\s+/', '', $exclude);
+            $exclude = explode(',', $exclude);
+            
+            foreach($include as $includeKey => $includeValue) 
+            {
+                foreach($exclude as $excludeKey => $excludeValue)
+                {
+                    if(strpos($includeValue, $excludeValue) !== false)
+                    {
+                        unset($include[$includeKey]);
+                    }
+                }
+            }
+        }
 
         // define source: where the source files are
         $this->source = array(
@@ -420,7 +453,7 @@ class __Assets{
         
         // setup $data to be passed to ->save()
         $data = array(
-            'args'     => $args,
+            'include'  => $include,
             
             'minified' => $minified,
             'output'   => $this->output,

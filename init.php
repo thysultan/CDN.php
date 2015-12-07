@@ -3,9 +3,16 @@
 /**
  * Expose assets() func
  */
-function assets($dir = '', $args = 'all', $out = null, $minify = true)
+function assets(
+    $dir     = '', 
+    $include = 'all', 
+    $exclude = null, 
+    $out     = null, 
+    $minify  = true
+)
 {
     require_once 'classes/main.php';
+    
     $helpers = new __Assets();
-    $helpers->assets($dir, $args, $out, $minify);
+    $helpers->assets($dir, $include, $exclude, $out, $minify);
 }
