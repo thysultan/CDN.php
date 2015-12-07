@@ -17,28 +17,31 @@ A Tiny assets manager, that takes a folder and delivers minified & combined asse
 <?php assets('/assets/css/', 'main.css, header.scss'); ?>
 <?php assets('/assets/js/', 'main.js, module.js'); ?>
 
+// Lists files to exclude
+<?php assets('/assets/css/', null, 'main.css, header.scss'); ?>
+<?php assets('/assets/js/', null, 'main.js, module.js'); ?>
+
 // Specify different folder to save minified folder. default = first param + '/minified/'
-<?php assets('/assets/css/', 'all', '/folder/to/save/minfied/'); ?>
-<?php assets('/assets/js/', 'all', '/folder/to/save/minfied/'); ?>
+<?php assets('/assets/css/', null, null, '/folder/to/save/minfied/'); ?>
+<?php assets('/assets/js/', null, null, '/folder/to/save/minfied/'); ?>
 
 // Unminified
-<?php assets('/assets/css/',null,null,false); ?>
-<?php assets('/assets/js/',null,null,false); ?>
+<?php assets('/assets/css/', null, null, false); ?>
+<?php assets('/assets/js/', null, null, false); ?>
 ```
 
 ### Parameters
 
 1. Location to assets folder i.e for css it could be '/assets/css/' **(required)
 2. 'all' or a list of files seperated by (,) comma or left blank(defaults 'all'). **(optional)
+3. list of files  to exclude seperated by (,) comma or left blank(defaults to exlcude none) **(optional)
 3. location to save '/minified/' assets folder to **(optional)
 
 ### Output
 
 ```html
-//Adds versions to the rendered link i.e
-
-<script src="/assets/js/all.js?v=$last-modified-time-stamp">
-<link href="/assets/css/all.css?v=$last-modified-time-stamp" rel="stylesheet">
+<script src="/assets/minified/all.min.modified-time-stamp.js">
+<link rel="stylesheet" href="/assets/minified/all.min.modified-time-stamp.css">
 ```
 
 #### Example directory structure
@@ -80,10 +83,10 @@ Apart from the generation of all.js/css files it serves the cached copy if nothi
 
 ### and?
 
-Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, helps with javascript if you want one library to come first that your code depends on. Also files ending with .min.ext, i.e *main.min.js* or *main.min.css*
+Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, this can helps with javascript if you want one library that another depends on to come first. Also files ending with .min.ext, i.e *main.min.js* or *main.min.css* do not get processed/minified/sass compiled.
 
 
-### Good luck, and don't forget to add Gziping for Css and Javascript to your .htaccess.
+### Good luck, and don't forget Gziping for Css and Javascript.
 
 ```
 //.htaccess
