@@ -11,7 +11,7 @@ function assets(
     $minify  = true
 )
 {
-    require_once 'classes/main.php';
+    require_once '__main.php';
     
     $helpers = new __Assets();
     $helpers->assets($dir, $include, $exclude, $out, $minify);

@@ -8,10 +8,22 @@ class __Assets{
             $_base, 
             $_root, 
             $error, 
-            $type;
+            $type,
+            $env;
 
     public function __construct() 
     {
+        
+        // Don't compile on production
+        if($_SERVER["REMOTE_ADDR"] !== "127.0.0.1")
+        {
+            $this->env = 'prod';
+        }
+        else
+        {
+            $this->env = 'dev';    
+        }
+        
 		$this->_ds 		= DIRECTORY_SEPARATOR;
 		
 		// get root dir
@@ -154,7 +166,11 @@ class __Assets{
 				$files[] = $value;
 
                 // set state based on file difference
-                if( $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false )
+                if( 
+                    $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false
+                    &&
+                    $this->env !== 'prod'
+                )
                 {
                     $refresh['state'] = true;
                     $refresh['value'] = true;
