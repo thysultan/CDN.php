@@ -24,18 +24,18 @@ class __Assets{
             $this->env = 'dev';    
         }
         
-		$this->_ds 		= DIRECTORY_SEPARATOR;
-		
-		// get root dir
-		$base           = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
-		
-		// find assets folder
+        $this->_ds      = DIRECTORY_SEPARATOR;
+        
+        // get root dir
+        $base           = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
+        
+        // find assets folder
         $folder         = explode( '/', $_SERVER["SCRIPT_NAME"] );
                           array_pop( $folder );
 
         $folder         = implode( '/', $folder );
         
-		// config base(assets) & root(project) dir's
+        // config base(assets) & root(project) dir's
         $this->_base = $base . $folder;
         $this->_root = $base;
         
@@ -71,8 +71,8 @@ class __Assets{
         // Remove comments
         $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
         
-        // Remove new lines	etc	
-		$buffer = preg_replace( '/\s+/S', ' ', $buffer );
+        // Remove new lines etc 
+        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
         
         // Remove extra spacing between the following chars
         $opts = array(
@@ -109,9 +109,9 @@ class __Assets{
         {
             $buffer = str_replace(array($opt." ", " ".$opt), $opt, $buffer );
         }
-		
+        
         return $buffer;
-		
+        
     }
 
     /**
@@ -121,17 +121,17 @@ class __Assets{
     {
         extract($data);
 
-		// create buffer object
-		$buffer 		    = array();
-		$buffer['source']   = '';
-		$buffer['minified'] = '';
-		
-		// create buffer object
-		$refresh 		    = array();
-		$refresh['state']   = false;
-		$refresh['value']   = false;
+        // create buffer object
+        $buffer             = array();
+        $buffer['source']   = '';
+        $buffer['minified'] = '';
+        
+        // create buffer object
+        $refresh            = array();
+        $refresh['state']   = false;
+        $refresh['value']   = false;
 
-        $files 				 = array();
+        $files               = array();
         
         // To minify or not?
         $minify              = ( $minify ) ? 'min.' : '';
@@ -159,11 +159,11 @@ class __Assets{
         
         
         // loop: file paths in $include
-		foreach( $include as $key => $value )
-		{
-			if( file_exists( $value ) )
-			{
-				$files[] = $value;
+        foreach( $include as $key => $value )
+        {
+            if( file_exists( $value ) )
+            {
+                $files[] = $value;
 
                 // set state based on file difference
                 if( 
@@ -175,11 +175,11 @@ class __Assets{
                     $refresh['state'] = true;
                     $refresh['value'] = true;
                 }
-			}
-			
-		}
-		
-		 // refresh? create/update file once every update
+            }
+            
+        }
+        
+         // refresh? create/update file once every update
         if( $refresh['value'] === true )
         {
             foreach ( $files as $key => $value )
@@ -304,9 +304,9 @@ class __Assets{
         
         /**
          * Normalize input, if input does not end/start with / 
-           i.e /dirname -> /dirname/
-           i.e dirname/ -> /dirname/
-           i.e dirname  -> /dirname/
+         * i.e /dirname -> /dirname/
+         * i.e dirname/ -> /dirname/
+         * i.e dirname  -> /dirname/
          */
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
         $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
@@ -315,7 +315,7 @@ class __Assets{
         if(
             $dir === ''      ||
             !is_string($dir) ||
-            !is_dir( $this->_base . str_replace(array('/', '\\'), $this->_ds, $dir) )
+            !is_dir( $this->_root . str_replace(array('/', '\\'), $this->_ds, $dir) )
             )
         {
             echo '<!-- Error: Not an actual directory -->';
@@ -344,8 +344,8 @@ class __Assets{
         unset( $dir[ count($dir)-2 ] );
 
         $dir            = implode('/', $dir);
-        $this->_assets  = $this->_base . str_replace( array( '/', '\\' ), $this->_ds, $dir );
-        $out            = ( $out !== null ) ? $this->_base.$out : $this->_assets;
+        $this->_assets  = $this->_root . str_replace( array( '/', '\\' ), $this->_ds, $dir );
+        $out            = ( $out !== null ) ? $this->_root.$out : $this->_assets;
 
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
