@@ -69,7 +69,38 @@ class __Assets{
     private function compress($buffer)
     {   
         // Remove comments
-        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
+        // $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
+
+        /**
+         * Trick php to think this is php code,
+         * It doesnt seem to work if it doesn't
+         * worth the performace gain compared to preg_replace()
+         */
+        $buffer = "<?php " . $buffer . " ?>";
+        $fileStr       = $buffer;
+        $newStr        = '';
+        $commentTokens = array(T_COMMENT,T_DOC_COMMENT);
+        $tokens        = token_get_all($fileStr);
+
+        foreach ($tokens as $token) 
+        {    
+            if (is_array($token)) 
+            {
+                if (in_array($token[0], $commentTokens))
+                {
+                    continue;
+                }
+
+                $token = $token[1];
+            }
+
+            $newStr .= $token;
+        }
+
+        $buffer = $newStr;
+        $buffer = substr($buffer, 0, -3);
+        $buffer = substr($buffer, 6);
+
 
         // Remove new lines, whitespace, etc 
         $buffer = preg_replace( '/\s+/S', ' ', $buffer );
@@ -180,7 +211,7 @@ class __Assets{
         }
         
          // refresh? create/update file once every update
-        if( $refresh['value'] === true )
+        if( $refresh['value'] = true )
         {   
 
             /**
@@ -221,6 +252,7 @@ class __Assets{
 
             // Add compilied sass to contents
             $buffer['minified'] .= $buffer['sass'];
+
 
             // make minified output dir' if it doesn't already exist
             if( !is_dir( $output['path'] ) )
