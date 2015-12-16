@@ -70,32 +70,8 @@ class __Assets{
     {   
         /**
          * Remove Comments
-         *
-         * $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
-         * Faster than the above method ^^ which proved very slow on large files.
          */
-        $fileStr       = $buffer;
-        $newStr        = '';
-        $commentTokens = array(T_COMMENT,T_DOC_COMMENT);
-        $tokens        = token_get_all($fileStr);
-
-        foreach ($tokens as $token) 
-        {    
-            if (is_array($token)) 
-            {
-                if (in_array($token[0], $commentTokens))
-                {
-                    continue;
-                }
-
-                $token = $token[1];
-            }
-
-            $newStr .= $token . ' ';
-        }
-
-        $buffer = $newStr;
-
+        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
 
         // Remove new lines, whitespace, etc 
         $buffer = preg_replace( '/\s+/S', ' ', $buffer );
@@ -206,7 +182,7 @@ class __Assets{
         }
         
          // refresh? create/update file once every update
-        if( $refresh['value'] === true )
+        if( $refresh['value'] = true )
         {   
 
             /**
