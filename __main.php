@@ -68,7 +68,7 @@ class __Assets{
      */
     private function compress($buffer)
     {   
-        // Remove Comments
+        // Remove comments
         $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
 
         // Remove new lines, whitespace, etc 
