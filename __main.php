@@ -68,10 +68,36 @@ class __Assets{
      */
     private function compress($buffer)
     {   
-        // Remove comments
-        $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
-        
-        // Remove new lines etc 
+        /**
+         * Remove Comments
+         *
+         * $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
+         * Faster than the above method ^^ which proved very slow on large files.
+         */
+        $fileStr       = $buffer;
+        $newStr        = '';
+        $commentTokens = array(T_COMMENT,T_DOC_COMMENT);
+        $tokens        = token_get_all($fileStr);
+
+        foreach ($tokens as $token) 
+        {    
+            if (is_array($token)) 
+            {
+                if (in_array($token[0], $commentTokens))
+                {
+                    continue;
+                }
+
+                $token = $token[1];
+            }
+
+            $newStr .= $token . ' ';
+        }
+
+        $buffer = $newStr;
+
+
+        // Remove new lines, whitespace, etc 
         $buffer = preg_replace( '/\s+/S', ' ', $buffer );
         
         // Remove extra spacing between the following chars
@@ -102,16 +128,16 @@ class __Assets{
             
             '<', '>', '<=', '>=',
             
-            '~', '?', '+', '-', '/', '*', '%', '**'
+            '~', '?', '+', '-', '/', '*', '%', '**',
         );
         
         foreach($opts as $opt)
         {
             $buffer = str_replace(array($opt." ", " ".$opt), $opt, $buffer );
         }
-        
+
         return $buffer;
-        
+
     }
 
     /**
@@ -123,7 +149,7 @@ class __Assets{
 
         // create buffer object
         $buffer             = array();
-        $buffer['source']   = '';
+        $buffer['sass']     = '';
         $buffer['minified'] = '';
         
         // create buffer object
@@ -181,7 +207,30 @@ class __Assets{
         
          // refresh? create/update file once every update
         if( $refresh['value'] === true )
-        {
+        {   
+
+            /**
+             * Deal with sass files:
+             * Run sass files through sass compiler, altogether
+             * To Preserve variable scope between files.
+             */
+            foreach ($files as $key => $value) {
+                if( strpos($value, '.scss') )
+                {
+                    // Make sure file starts and ends with a newline
+                    $buffer['sass'] .= '
+
+                    '.file_get_contents( $value ).'
+
+                     ';
+                    unset( $files[$key] );
+                }
+            };
+
+            $buffer['sass'] = $this->_sass( $buffer['sass'] );
+
+
+            // Deal with every other type of file
             foreach ( $files as $key => $value )
             {
                 $ext       = explode( '.', $value );
@@ -189,24 +238,15 @@ class __Assets{
                 // Don't compress file if already minified
                 $this->min = $ext[ count($ext)-2 ];
                 
-                // Get extension
-                $ext       = end($ext);
-                
                 // Get contents
                 $contents  = file_get_contents( $value );
-                
-                // If sass file run through sass compiller
-                if( $ext === 'scss' )
-                {
-                    $buffer['source']   .= $this->_sass( $contents, true );
-                    $buffer['minified'] .= $this->_sass( $contents );
-                }
-                else
-                {
-                    $buffer['source']   .= $contents;
-                    $buffer['minified'] .= ( $this->min === 'min' ) ? $contents : $this->compress( $contents );
-                }
+
+                // If file minified don't run through compressor
+                $buffer['minified'] .= ( $this->min === 'min' ) ? $contents : $this->compress( $contents );
             }
+
+            // Add compilied sass to contents
+            $buffer['minified'] .= $buffer['sass'];
 
             // make minified output dir' if it doesn't already exist
             if( !is_dir( $output['path'] ) )
@@ -304,9 +344,9 @@ class __Assets{
         
         /**
          * Normalize input, if input does not end/start with / 
-         * i.e /dirname -> /dirname/
-         * i.e dirname/ -> /dirname/
-         * i.e dirname  -> /dirname/
+           i.e /dirname -> /dirname/
+           i.e dirname/ -> /dirname/
+           i.e dirname  -> /dirname/
          */
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
         $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
@@ -315,7 +355,7 @@ class __Assets{
         if(
             $dir === ''      ||
             !is_string($dir) ||
-            !is_dir( $this->_root . str_replace(array('/', '\\'), $this->_ds, $dir) )
+            !is_dir( $this->_base . str_replace(array('/', '\\'), $this->_ds, $dir) )
             )
         {
             echo '<!-- Error: Not an actual directory -->';
@@ -329,7 +369,6 @@ class __Assets{
 
         if(
             strpos($this->type, 'css')   !== false ||
-            strpos($this->type, 'sass')  !== false ||
             strpos($this->type, 'scss')  !== false
             )
         {
@@ -344,8 +383,8 @@ class __Assets{
         unset( $dir[ count($dir)-2 ] );
 
         $dir            = implode('/', $dir);
-        $this->_assets  = $this->_root . str_replace( array( '/', '\\' ), $this->_ds, $dir );
-        $out            = ( $out !== null ) ? $this->_root.$out : $this->_assets;
+        $this->_assets  = $this->_base . str_replace( array( '/', '\\' ), $this->_ds, $dir );
+        $out            = ( $out !== null ) ? $this->_base.$out : $this->_assets;
 
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
