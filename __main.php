@@ -344,9 +344,9 @@ class __Assets{
         
         /**
          * Normalize input, if input does not end/start with / 
-           i.e /dirname -> /dirname/
-           i.e dirname/ -> /dirname/
-           i.e dirname  -> /dirname/
+         * i.e /dirname -> /dirname/
+         * i.e dirname/ -> /dirname/
+         * i.e dirname  -> /dirname/
          */
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
         $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
@@ -355,7 +355,7 @@ class __Assets{
         if(
             $dir === ''      ||
             !is_string($dir) ||
-            !is_dir( $this->_base . str_replace(array('/', '\\'), $this->_ds, $dir) )
+            !is_dir( $this->_root . str_replace(array('/', '\\'), $this->_ds, $dir) )
             )
         {
             echo '<!-- Error: Not an actual directory -->';
@@ -383,8 +383,8 @@ class __Assets{
         unset( $dir[ count($dir)-2 ] );
 
         $dir            = implode('/', $dir);
-        $this->_assets  = $this->_base . str_replace( array( '/', '\\' ), $this->_ds, $dir );
-        $out            = ( $out !== null ) ? $this->_base.$out : $this->_assets;
+        $this->_assets  = $this->_root . str_replace( array( '/', '\\' ), $this->_ds, $dir );
+        $out            = ( $out !== null ) ? $this->_root.$out : $this->_assets;
 
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
