@@ -211,7 +211,7 @@ class __Assets{
         }
         
          // refresh? create/update file once every update
-        if( $refresh['value'] = true )
+        if( $refresh['value'] === true )
         {   
 
             /**
