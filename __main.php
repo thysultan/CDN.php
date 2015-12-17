@@ -22,7 +22,6 @@ class __Assets{
             $this->env = 'dev';
         }
 
-        echo $this->env;
         
         $this->_ds      = DIRECTORY_SEPARATOR;
         
