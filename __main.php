@@ -15,14 +15,14 @@ class __Assets{
     {
         
         // Don't compile on production
-        if($_SERVER["REMOTE_ADDR"] !== "127.0.0.1")
+        $this->env = 'prod';
+
+        if( $_SERVER["REMOTE_ADDR"] === "127.0.0.1" || $_SERVER['SERVER_NAME'] === 'localhost' )
         {
-            $this->env = 'prod';
+            $this->env = 'dev';
         }
-        else
-        {
-            $this->env = 'dev';    
-        }
+
+        echo $this->env;
         
         $this->_ds      = DIRECTORY_SEPARATOR;
         
