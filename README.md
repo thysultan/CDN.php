@@ -76,11 +76,11 @@ given '/assets/css/' it looks for all files in the specified directory, minifies
 
 ### What else?
 
-It does Sass, you can write .scss files and they will be evaluated at silent-runtime to update all.css.
+It does Sass, you can write .scss files and they will be evaluated at dev-runtime(it does not run on production) to update all.css.
 
 ### Performance?
 
-Apart from the generation of all.js/css files it serves the cached copy if nothing has changed, and updates the cached copy only on the first request if something has.
+Apart from the generation of all.js/css files it serves the cached copy if nothing has changed(always defaults to this production), and updates the cached copy only on the first request if something has.
 
 
 ### and?
