@@ -2,6 +2,8 @@
 
 A Tiny assets manager, that takes a folder and delivers minified & combined assets per type(css/js), works with css &amp; js & .scss(sass). Essentially also a sass php compiler.
 
+See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the code base](https://github.com/sultantarimo/Framework.php)
+
 
 ### Usage
 
