@@ -378,7 +378,7 @@ class __Assets{
 
         if(
             strpos($this->type, 'css')   !== false ||
-            strpos($this->type, 'scss')  !== false
+            strpos($this->type, 'style') !== false
             )
         {
             $this->type = 'css';
