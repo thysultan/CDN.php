@@ -28,8 +28,11 @@ See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the co
 <?php assets('/assets/js/', null, null, '/folder/to/save/minfied/'); ?>
 
 // Unminified
-<?php assets('/assets/css/', null, null, false); ?>
-<?php assets('/assets/js/', null, null, false); ?>
+<?php assets('/assets/css/', null, null, null, false); ?>
+<?php assets('/assets/js/', null, null, null, false); ?>
+
+// Sass output style
+<?php assets('/assets/css/', null, null, null, 'nested'); ?>
 ```
 
 ### Parameters
@@ -37,7 +40,8 @@ See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the co
 1. Location to assets folder i.e for css it could be '/assets/css/' **(required)
 2. 'all' or a list of files seperated by (,) comma or left blank(defaults 'all'). **(optional)
 3. list of files  to exclude seperated by (,) comma or left blank(defaults to exlcude none) **(optional)
-3. location to save '/minified/' assets folder to **(optional)
+4. location to save '/minified/' assets folder to **(optional)
+5. Bool, true || false if you want the assets minified or not, or a sass style "nested | expanded | compact | compressed"
 
 ### Output
 

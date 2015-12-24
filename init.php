@@ -20,19 +20,18 @@ class __Assets{
         {
             $this->env = 'dev';
         }
-
         
-        $this->_ds      = DIRECTORY_SEPARATOR;
-        $this->bin      = str_replace( array('/', '\\'), $this->_ds, __DIR__.'/bin/' );
+        $this->_ds        = DIRECTORY_SEPARATOR;
+        $this->bin        = str_replace( array('/', '\\'), $this->_ds, __DIR__.'/bin/' );
         
         // get root dir
-        $base           = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
+        $base             = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
         
         // find assets folder
-        $folder         = explode( '/', $_SERVER["SCRIPT_NAME"] );
+        $folder           = explode( '/', $_SERVER["SCRIPT_NAME"] );
                           array_pop( $folder );
 
-        $folder         = implode( '/', $folder );
+        $folder           = implode( '/', $folder );
         
         // config base(assets) & root(project) dir's
         $this->_base = $base . $folder;
@@ -121,12 +120,9 @@ class __Assets{
     /**
      * sass compiler
      */
-    private function _sass(
-        $input, 
-        $extended = null
-    )
+    private function _sass($input)
     {
-        $cmd    = $this->bin.'sass-'. $this->getOS() .' --stdin --style compressed';
+        $cmd    = $this->bin.'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style;
         $output = $this->exec($cmd, $input);
 
 
@@ -189,6 +185,8 @@ class __Assets{
         // Remove extra spacing between the following chars
         $opts = array(
             ',', ';', ':',
+
+            '[', ']',
             
             '{', '}',
 
@@ -214,12 +212,6 @@ class __Assets{
             
             '~', '?', '+', '-', '/', '*', '%', '**',
         );
-
-        if( $this->type === 'js' )
-        {
-            $opts[] = '[';
-            $opts[] = ']';
-        }
         
         foreach($opts as $opt)
         {
@@ -443,6 +435,8 @@ class __Assets{
         $minify
     )
     {
+        $this->sass_output_style = ( !is_bool($minify) ) ? $minify : 'compressed';
+
         // default to 'all' files option
         if($include === null)
         {
