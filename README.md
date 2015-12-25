@@ -33,6 +33,12 @@ See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the co
 
 // Sass output style
 <?php assets('/assets/css/', null, null, null, 'nested'); ?>
+
+// Specify main/single source file that imports all your files
+<?php assets('/assets/stylesheets/', 'style.scss'); ?>
+
+// Force refresh(normally only updates minified file after changes have occured to source files)
+<?php assets('/assets/stylesheets/', null, null, null, null); ?>
 ```
 
 ### Parameters
