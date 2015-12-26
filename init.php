@@ -5,6 +5,9 @@ class __Assets{
             $_assets, 
             $_base, 
             $_root, 
+            $_type,
+
+            $refresh,
             $error, 
             $type,
             $env,
@@ -122,7 +125,15 @@ class __Assets{
      */
     private function _sass($input)
     {
-        $cmd    = $this->bin.'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style;
+        $import = $this->_assets . $this->_type . $this->_ds;
+        $cmd    =   $this->bin                . 
+                    'sass-'                   . 
+                    $this->getOS()            . 
+                    ' --stdin --style '       . 
+                    $this->sass_output_style  .
+                    ' --load-path '           .
+                    $import;
+
         $output = $this->exec($cmd, $input);
 
 
@@ -265,7 +276,6 @@ class __Assets{
             $this->output['name'] = 'all.' . time() . '.' . $this->type;
         }
         
-        
         // loop: file paths in $include
         foreach( $include as $key => $value )
         {
@@ -275,9 +285,14 @@ class __Assets{
 
                 // set state based on file difference
                 if( 
-                    $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false
+                    (
+                        $this->refresh === true
+                        ||
+                        $this->minified['time']($this->output['path'], $this->output['name']) > filemtime($value) === false
+                    )
                     &&
                     $this->env !== 'prod'
+                    
                 )
                 {
                     $refresh['state'] = true;
@@ -432,10 +447,13 @@ class __Assets{
         $include,
         $exclude,
         $out, 
-        $minify
+        $minify,
+        $refresh
     )
     {
-        $this->sass_output_style = ( !is_bool($minify) ) ? $minify : 'compressed';
+        $minify                  = ( $minify === null )             ? true         : $minify;
+        $this->sass_output_style = ( is_bool($minify) || !$minify ) ? 'compressed' : $minify;
+        $this->refresh           = $refresh;
 
         // default to 'all' files option
         if($include === null)
@@ -466,7 +484,7 @@ class __Assets{
         $dir = explode('/', $dir);
         
         // set file type
-        $this->type = $dir[ count($dir)-2 ];
+        $this->_type = $this->type = $dir[ count($dir)-2 ];
 
         if(
             strpos($this->type, 'css')   !== false ||
@@ -540,9 +558,12 @@ class __Assets{
             foreach ($include as $file)
             {
                 // Create list of files
-                $files[] = $this->_assets . $this->type . $this->_ds . $file;
+                $files[] = $this->_assets . $this->_type . $this->_ds . $file;
             }
             
+            // replace '/' with native DIRECTORY_SEPARATOR
+            $files = str_replace( array( '/', '\\' ), $this->_ds, $files );
+
             // Reconstruct args parts back together
             $include = implode(',', $files);
         }
@@ -683,9 +704,10 @@ function assets(
     $include = 'all', 
     $exclude = null, 
     $out     = null, 
-    $minify  = true
+    $minify  = true,
+    $refresh = false
 )
 {    
     $helpers = new __Assets();
-    $helpers->assets($dir, $include, $exclude, $out, $minify);
+    $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh);
 }
