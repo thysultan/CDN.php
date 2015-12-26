@@ -112,7 +112,7 @@ class __Assets{
             2 => array('pipe','w')  // stderr
         );
 
-        $output = array();
+        $output  = array();
         $process = proc_open($cmd, $spec, $pipes);
 
         if ( is_resource($process) ) 
@@ -167,7 +167,7 @@ class __Assets{
         $output     = array();
         $return_var = 255;
 
-        @exec($cmd, $output, $return_var);
+        exec($cmd, $output, $return_var);
 
         if ($return_var === 0) 
         {
