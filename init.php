@@ -17,71 +17,48 @@ class __Assets{
     {
         
         // Don't compile on production
-        $this->env = 'prod';
+            $this->env = 'prod';
 
         if( $_SERVER["REMOTE_ADDR"] === "127.0.0.1" || $_SERVER['SERVER_NAME'] === 'localhost' )
         {
             $this->env = 'dev';
         }
         
+
         $this->_ds        = DIRECTORY_SEPARATOR;
-        $this->bin        = str_replace( array('/', '\\'), $this->_ds, __DIR__.'/bin/' );
+        $this->bin        = $this->dir_sys_path(__DIR__.'/bin/');
         
         // get root dir
-        $base             = str_replace( array('/', '\\'), $this->_ds, $_SERVER['DOCUMENT_ROOT'] );
+        $base             = $this->dir_sys_path($_SERVER['DOCUMENT_ROOT']);
         
         // find assets folder
         $folder           = explode( '/', $_SERVER["SCRIPT_NAME"] );
-                          array_pop( $folder );
+                            array_pop( $folder );
 
         $folder           = implode( '/', $folder );
         
         // config base(assets) & root(project) dir's
         $this->_base = $base . $folder;
         $this->_root = $base;
-        
     }
 
 
-    /**
-     * exec() with stdin
-     */
-    private function exec($cmd, $input)
+    private function dir_sys_path($dir)
     {
-        // Add pipes to flow data
-        $spec = array(
-            0 => array('pipe','r'), // stdin
-            1 => array('pipe','w'), // stdout
-            2 => array('pipe','w')  // stderr
-        );
+        return str_replace( array('/', '\\'), $this->_ds, $dir );
+    }
 
-        $output = array();
-        $process = proc_open($cmd, $spec, $pipes);
-
-        if ( is_resource($process) ) 
-        {
-            // Send the [INPUT] on stdin
-            fwrite( $pipes[0], $input );
-            fclose( $pipes[0] );
-
-            // Read the outputs
-            $output['success'] = stream_get_contents( $pipes[1] ); // The return
-            $output['error'] = stream_get_contents( $pipes[2] );   // Where any error will be
-
-            // Close the process
-            fclose($pipes[1]);
-            proc_close($process); // 1 | 0
-
-            // Return
-            return $output;
-        }
+    private function dir_www_path($dir)
+    {
+        return str_replace( $this->_ds, '/', $dir );
     }
 
 
     /**
      * get OS of local machine
      */
-    function getOS() { 
+    private function getOS() 
+    {
         $os_platform    =   '';
         $os_array       =   array(
                                 '/Windows/i' =>  'win.msi',
@@ -120,117 +97,83 @@ class __Assets{
         return rmdir($dir);
     }
 
+
     /**
-     * sass compiler
+     * exec() with stdin
+     */
+    private function exec($cmd, $input)
+    {
+        $cmd = $this->bin . $cmd;
+
+        // Add pipes to flow data
+        $spec = array(
+            0 => array('pipe','r'), // stdin
+            1 => array('pipe','w'), // stdout
+            2 => array('pipe','w')  // stderr
+        );
+
+        $output = array();
+        $process = proc_open($cmd, $spec, $pipes);
+
+        if ( is_resource($process) ) 
+        {
+            // Send the [INPUT] on stdin
+            fwrite( $pipes[0], $input );
+            fclose( $pipes[0] );
+
+            // Read the outputs
+            $output['success'] = stream_get_contents( $pipes[1] ); // The return
+            $output['error']   = stream_get_contents( $pipes[2] );   // Where any error will be
+
+            // Close the process
+            fclose($pipes[1]);
+            proc_close($process); // 1 | 0
+
+
+            if( $output['error'] )
+            {
+                echo "<pre style='color:red;font-weight:bold;font-size:16px;'>" 
+                     . 
+                     $output['error'] 
+                     . 
+                     "</pre>";
+
+                exit;
+            }
+
+            // Return
+            return $output['success'];
+        }
+    }
+
+
+    /**
+     * sass/css compiler/minify
      */
     private function _sass($input)
     {
-        $import = $this->_assets . $this->_type . $this->_ds;
-        $cmd    =   $this->bin                . 
-                    'sass-'                   . 
-                    $this->getOS()            . 
-                    ' --stdin --style '       . 
-                    $this->sass_output_style  .
-                    ' --load-path '           .
-                    $import;
+        $import_path = $this->_assets . $this->_type . $this->_ds;
+        $cmd         = 'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style  . ' --load-path ' . $import_path;
 
-        $output = $this->exec($cmd, $input);
-
-
-        if( $output['error'] )
-        {
-            echo "<pre style='color:red;font-weight:bold;font-size:16px;'>" 
-                 . 
-                 $output['error'] 
-                 . 
-                 "</pre>";
-
-            exit;
-        }
-
-        return $output['success'];        
+        return $this->exec($cmd, $input); 
     }
 
     /**
-     * compress Buffer
+     * js compiler compiler/minify
      */
-    private function compress($buffer)
-    {   
-        // Remove comments
-        // $buffer = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\")\/\/.*))/', '', $buffer);
+    private function _js($input)
+    {
+        $cmd        = $this->bin . 'jsmin-' . str_replace('.msi', '.exe', $this->getOS()) . ' < ' . $input;
+        $output     = array();
+        $return_var = 255;
 
-        /**
-         * Trick php to think this is php code,
-         * It doesnt seem to work if it doesn't
-         * worth the performace gain compared to preg_replace()
-         */
-        $buffer        = "<?php " . $buffer . " ?>";
-        $fileStr       = $buffer;
-        $newStr        = '';
-        $commentTokens = array(T_COMMENT,T_DOC_COMMENT);
-        $tokens        = token_get_all($fileStr);
+        @exec($cmd, $output, $return_var);
 
-        foreach ($tokens as $token) 
-        {    
-            if (is_array($token)) 
-            {
-                if (in_array($token[0], $commentTokens))
-                {
-                    continue;
-                }
-
-                $token = $token[1];
-            }
-
-            $newStr .= $token;
-        }
-
-        $buffer = $newStr;
-        $buffer = substr($buffer, 0, -3);
-        $buffer = substr($buffer, 6);
-
-
-        // Remove new lines, whitespace, etc 
-        $buffer = preg_replace( '/\s+/S', ' ', $buffer );
-        
-        // Remove extra spacing between the following chars
-        $opts = array(
-            ',', ';', ':',
-
-            '[', ']',
-            
-            '{', '}',
-
-            '(', ')',
-            
-            '=', '==', '===',
-            
-            '!', '!=', '!==',
-            
-            '||', '|',
-            
-            '&&', '&',
-            
-            '^',
-
-            '*=', '+=', '-=', '/=', '&=', '^=', '|=',
-            
-            '<<', '>>', '>>>',
-            
-            '<<=', '>>=', '>>>=',
-            
-            '<', '>', '<=', '>=',
-            
-            '~', '?', '+', '-', '/', '*', '%', '**',
-        );
-        
-        foreach($opts as $opt)
+        if ($return_var === 0) 
         {
-            $buffer = str_replace(array($opt." ", " ".$opt), $opt, $buffer );
+            $output = implode(" ", $output);
+            return $output;
         }
-
-        return $buffer;
-
     }
 
     /**
@@ -354,7 +297,7 @@ class __Assets{
                     $contents  = file_get_contents( $value );
 
                     // If file minified don't run through compressor
-                    $buffer['minified'] .= ( $this->min === 'min' ) ? $contents : $this->compress( $contents );
+                    $buffer['minified'] .= ( $this->min === 'min' ) ? $contents : $this->_js( $value );
                 }
             }
 
@@ -374,10 +317,10 @@ class __Assets{
                     <!-- 
                     
                     ". 
-                    "Error: php could note create the 'minfied' folder in ".dirname(dirname( $minified['path'] ))."/,
+                    "Error: php could note create the 'minfied' folder in " . dirname(dirname( $minified['path'] )) . ",
                     
                     ". 
-                    "Fix: change permissions of the Folder '". dirname(dirname( $minified['path'] )).
+                    "Fix: change permissions of the Folder '". dirname(dirname( $minified['path'] )) . 
                     "'; 
                     
                     -->
@@ -474,7 +417,7 @@ class __Assets{
         if(
             $dir === ''      ||
             !is_string($dir) ||
-            !is_dir( $this->_root . str_replace(array('/', '\\'), $this->_ds, $dir) )
+            !is_dir( $this->_root . $this->dir_sys_path($dir) )
             )
         {
             echo '<!-- Error: Not an actual directory -->';
@@ -502,7 +445,7 @@ class __Assets{
         unset( $dir[ count($dir)-2 ] );
 
         $dir            = implode('/', $dir);
-        $this->_assets  = $this->_root . str_replace( array( '/', '\\' ), $this->_ds, $dir );
+        $this->_assets  = $this->_root . $this->dir_sys_path($dir);
         $out            = ( $out !== null ) ? $this->_root.$out : $this->_assets;
 
         // include all files if 'all' or 'null': not set
@@ -562,7 +505,7 @@ class __Assets{
             }
             
             // replace '/' with native DIRECTORY_SEPARATOR
-            $files = str_replace( array( '/', '\\' ), $this->_ds, $files );
+            $files = $this->dir_sys_path($files);
 
             // Reconstruct args parts back together
             $include = implode(',', $files);
@@ -570,7 +513,7 @@ class __Assets{
 
 
         // replace '/' with native directory '/' + make array
-        $include = str_replace(array('/', '\\'), $this->_ds, $include);
+        $include = $this->dir_sys_path($include);
         
         // Convert args back to array.
         $include = explode(',', $include);
@@ -595,8 +538,8 @@ class __Assets{
 
         // define source: where the source files are
         $this->source = array(
-            'path'  => str_replace(array('/', '\\'), $this->_ds, $out),
-            'www'   => str_replace($this->_ds, '/', str_replace($this->_root ,'', $out) )
+            'path'  => $this->dir_sys_path($out),
+            'www'   => $this->dir_www_path(str_replace($this->_root ,'', $out))
         );
         
         // define output: where the ouput will be, after compiling
