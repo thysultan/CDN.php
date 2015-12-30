@@ -38,7 +38,10 @@ See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the co
 <?php assets('/assets/stylesheets/', 'style.scss'); ?>
 
 // Force refresh(normally only updates minified file after changes have occured to source files)
-<?php assets('/assets/stylesheets/', null, null, null, true); ?>
+<?php assets('/assets/stylesheets/', null, null, null, null, true); ?>
+
+// Don't echo stylesheet/script links, returns url to minified file
+<?php assets('/assets/stylesheets/', null, null, null, null, null, true); ?>
 ```
 
 ### Parameters

@@ -391,7 +391,8 @@ class __Assets{
         $exclude,
         $out, 
         $minify,
-        $refresh
+        $refresh,
+        $return
     )
     {
         $minify                  = ( $minify === null )             ? true         : $minify;
@@ -412,7 +413,7 @@ class __Assets{
          */
         $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
         $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
-        
+
         // not an actual directory?
         if(
             $dir === ''      ||
@@ -597,8 +598,6 @@ class __Assets{
             'js'  => '<script src="' .                 $minified['www'] . '"></script>'
         );
         
-        // render html template.
-        echo $html[$this->type];
         
         /** 
          *  If we have an error display that. 
@@ -607,7 +606,25 @@ class __Assets{
          */
         if( $this->error )
         {
-            echo $this->error;
+            // render html template.
+            if( $return !== true )
+            {
+                echo $this->error;
+            }
+            
+            return false;
+        }
+        
+        else
+        {
+            // render html template.
+            if( $return !== true )
+            {
+                echo $html[$this->type];
+            }
+            
+            // return minified url.
+            return $minified['www']; 
         }
     }
     
@@ -648,9 +665,10 @@ function assets(
     $exclude = null, 
     $out     = null, 
     $minify  = true,
-    $refresh = false
+    $refresh = false,
+    $return  = null
 )
 {    
     $helpers = new __Assets();
-    $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh);
+    return $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh, $return);
 }
