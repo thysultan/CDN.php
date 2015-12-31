@@ -2,7 +2,7 @@
 
 A Tiny assets manager, that takes a folder and delivers minified & combined assets per type(css/js), works with css &amp; js & .scss(sass). Essentially also a full sass compiler.
 
-See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the code base](https://github.com/sultantarimo/Framework.php)
+See for live useage: [sultantarimo.com](http://sultantarimo.com), [the code base](https://github.com/sultantarimo/Framework.php)
 
 
 ### Usage
@@ -79,7 +79,7 @@ assets(array(
 	/* 
 	 * true|false, whether to always refresh, only applies to development(doesn't apply on production)
 	 * The default behaviour is to refresh only when the source file changes.
-	 * Since the default behaviour does not take into accout sass import files if your're using one base sass file.
+	 * Since the default behaviour does not take into account sass import files if you're using one base sass file.
 	 * This is a good option to enable of you go that route.
 	 */
 
@@ -91,35 +91,6 @@ assets(array(
 	 */
 
 ));
-
-function assets(
-    $dir     = '', 
-    $include = 'all', 
-    $exclude = null, 
-    $out     = null, 
-    $minify  = true,
-    $refresh = false,
-    $return  = null
-)
-{    
-    $helpers = new __Assets();
-
-    if( is_array($dir) || is_array($return) )
-    {
-    	$args    = $dir = $return;
-
-	    $dir     = $args['directory'];
-	    $include = $args['include'];
-	    $exclude = $args['exclude'];
-	    $out     = $args['output'];
-	    $minify  = $args['minify'];
-	    $refresh = $args['always-refresh'];
-	    $return  = $args['return'];
-    }
-
-    return $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh, $return);
-}
-?>
 ```
 
 ### Parameters
