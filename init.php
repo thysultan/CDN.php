@@ -670,5 +670,19 @@ function assets(
 )
 {    
     $helpers = new __Assets();
+
+    if( is_array($dir) )
+    {
+        $args    = $dir;
+
+        $dir     = $args['directory'];
+        $include = $args['include'];
+        $exclude = $args['exclude'];
+        $out     = $args['output'];
+        $minify  = $args['minify'];
+        $refresh = $args['refresh'];
+        $return  = $args['return'];
+    }
+
     return $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh, $return);
 }
