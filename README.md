@@ -2,7 +2,7 @@
 
 A Tiny assets manager, that takes a folder and delivers minified & combined assets per type(css/js), works with css &amp; js & .scss(sass). Essentially also a full sass compiler.
 
-See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the code base](https://github.com/sultantarimo/Framework.php)
+See for live useage: [sultantarimo.com](http://sultantarimo.com), [the code base](https://github.com/sultantarimo/Framework.php)
 
 
 ### Usage
@@ -42,6 +42,57 @@ See for live useage: [http://162.243.206.225/](http://162.243.206.225/), [the co
 
 // Don't echo stylesheet/script links, returns url to minified file
 <?php assets('/assets/stylesheets/', null, null, null, null, null, true); ?>
+
+// Using an array
+<?php
+
+assets(array(
+	'directory' => '',
+	/* 
+	 * Directory we look for the files specified in 'include' option
+	 * Also the default directory for 'output'
+	 */
+
+	'include'   => 'all'|string, 
+	/* 
+	 * Files to include, all/left blank inclues all files in the directory
+	 * Can specify specific files i.e main.scss.
+	 */
+
+	'exclude'   => null|string,
+	/* 
+	 * Files to exclude, i.e if you include all files in a folder but want to exclude a few.
+	 */
+
+	'output'    => null|string,
+	/* 
+	 * Where to save the output minified files i.e all.min.css/js
+	 * defaults to save in a minified folder created in the directory before 
+	 * the specified directory, i.e for '/assets/stylesheets/' it will be /assets/
+	 */
+
+	'minify'    => true|bool,
+	/* 
+	 * true|false, whether to minify the output or not.
+	 * can also be a sass output style. can be: "nested", "expanded", "compact", "compressed".
+	 */
+
+	'refresh'   => true|bool,
+	/* 
+	 * true|false, whether to always refresh, only applies to development(doesn't apply on production)
+	 * The default behaviour is to refresh only when the source file changes.
+	 * Since the default behaviour does not take into account sass import files if you're using one base sass file.
+	 * This is a good option to enable of you go that route.
+	 */
+
+	'return'    => null|bool
+	/* 
+	 * Normally a <script>(js) or <link>(css) is echoed to the html
+	 * This option disables, the return value of $value = assets(options)
+	 * Will be the url to the minified file.
+	 */
+
+));
 ```
 
 ### Parameters
@@ -101,7 +152,7 @@ Apart from the generation of all.js/css files it serves the cached copy if nothi
 Files are added to all.js alphabetically, so if you name a file something like ___jquery.js it will come before _second.js or third.js in the minified all.js/css, this can helps with javascript if you want one library that another depends on to come first. Also files ending with .min.ext, i.e *main.min.js* or *main.min.css* do not get processed/minified/sass compiled.
 
 
-### Good luck, and don't forget Gziping for Css and Javascript.
+### Good luck, and do not forget Gziping for Css and Javascript.
 
 ```
 //.htaccess
@@ -117,3 +168,26 @@ BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
 SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip
 Header append Vary User-Agent env=!dont-vary
 ```
+
+### and caching for static assets.
+
+```
+//.htaccess
+# EXPIRES CACHE
+
+ExpiresActive On
+ExpiresByType image/jpg                     "access 1 year"
+ExpiresByType image/jpeg                    "access 1 year"
+ExpiresByType image/gif                     "access 1 year"
+ExpiresByType image/png                     "access 1 year"
+ExpiresByType text/css                      "access 1 month"
+ExpiresByType text/html                     "access 1 month"
+ExpiresByType application/pdf               "access 1 month"
+ExpiresByType text/x-javascript             "access 1 month"
+ExpiresByType application/x-shockwave-flash "access 1 month"
+ExpiresByType image/x-icon                  "access 1 year"
+ExpiresDefault                              "access 1 month"
+```
+
+
+### If you have any suggestions for improvements, be my guest, send a PR or open an issue.

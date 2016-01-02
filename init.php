@@ -76,27 +76,6 @@ class __Assets{
         return $os_platform;
     }
 
-    private function delDir($dir) 
-    {
-        if ( !file_exists($dir) ) return true;
-        if ( !is_dir($dir) )      return unlink($dir);
-
-        foreach (scandir($dir) as $item) 
-        {
-            if ( $item == '.' || $item == '..' )
-            {
-                continue;
-            }
-
-            if ( !$this->delDir( $dir. $this->_ds .$item ) )
-            {
-                return false;
-            }
-        }
-
-        return rmdir($dir);
-    }
-
 
     /**
      * exec() with stdin
@@ -185,8 +164,6 @@ class __Assets{
 
         // create buffer object
         $buffer             = array();
-        $buffer['sass']     = '';
-        $buffer['minified'] = '';
         
         // create buffer object
         $refresh            = array();
@@ -247,7 +224,9 @@ class __Assets{
         
          // refresh? create/update file once every update
         if( $refresh['value'] === true )
-        {   
+        {
+            $buffer['sass']     = '';
+            $buffer['minified'] = '';
 
             /**
              * Deal with sass/css files:
@@ -282,7 +261,6 @@ class __Assets{
                     $buffer['sass'] = $this->_sass( $buffer['sass'] );
                 }
             }
-
             else
             {
                 // Deal with every other type of file, plain css/js
@@ -383,6 +361,19 @@ class __Assets{
     }
 
     /**
+     * Normalize input/dir, if input does not end/start with / 
+     * i.e /dirname -> /dirname/
+     * i.e dirname/ -> /dirname/
+     * i.e dirname  -> /dirname/
+     */
+    private function normalizeDir($dir){
+        $dir = ( substr($dir, -1) !== '/' )     ? $dir.'/'      : $dir;
+        $dir = ( $dir[0] !== '/' )              ? '/' . $dir    : $dir;
+
+        return $dir;
+    }
+
+    /**
      * Render assets link
      */
     public function assets(
@@ -399,27 +390,14 @@ class __Assets{
         $this->sass_output_style = ( is_bool($minify) || !$minify ) ? 'compressed' : $minify;
         $this->refresh           = $refresh;
 
-        // default to 'all' files option
-        if($include === null)
-        {
-            $include = 'all';
-        }
-        
-        /**
-         * Normalize input, if input does not end/start with / 
-         * i.e /dirname -> /dirname/
-         * i.e dirname/ -> /dirname/
-         * i.e dirname  -> /dirname/
-         */
-        $dir = ( substr($dir, -1) !== '/' ) ? $dir.'/' : $dir;
-        $dir = ( $dir[0] !== '/' ) ? '/'.$dir : $dir;
+        $dir = $this->normalizeDir($dir);
 
         // not an actual directory?
         if(
             $dir === ''      ||
             !is_string($dir) ||
             !is_dir( $this->_root . $this->dir_sys_path($dir) )
-            )
+        )
         {
             echo '<!-- Error: Not an actual directory -->';
             return;
@@ -437,7 +415,6 @@ class __Assets{
         {
             $this->type = 'css';
         }
-
         else
         {
             $this->type = 'js';
@@ -447,7 +424,7 @@ class __Assets{
 
         $dir            = implode('/', $dir);
         $this->_assets  = $this->_root . $this->dir_sys_path($dir);
-        $out            = ( $out !== null ) ? $this->_root.$out : $this->_assets;
+        $output         = ( $out !== null ) ? $this->_root . $this->normalizeDir($out) : $this->_assets;
 
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
@@ -471,7 +448,7 @@ class __Assets{
                     substr($file->getFileName(), 0, 1) == '.' ||
                     
                     // File should not be in minified folder
-                    strpos($file,'minified') !== false ||
+                    strpos($file, 'minified') !== false ||
                     
                     // If it's a file that is not of the same type, continue
                     strpos($ext, $this->type) === false
@@ -489,8 +466,7 @@ class __Assets{
             
             $include = implode(',', $files);
         }
-        // else only specified files
-        else
+        else // else only specified files
         {
             // remove whitespace
             $include = preg_replace('/\s+/', '', $include);
@@ -504,34 +480,35 @@ class __Assets{
                 // Create list of files
                 $files[] = $this->_assets . $this->_type . $this->_ds . $file;
             }
-            
-            // replace '/' with native DIRECTORY_SEPARATOR
-            $files = $this->dir_sys_path($files);
 
             // Reconstruct args parts back together
             $include = implode(',', $files);
         }
 
 
-        // replace '/' with native directory '/' + make array
+        // replace '/' with native directory '/'
         $include = $this->dir_sys_path($include);
         
-        // Convert args back to array.
+        // Convert back to array.
         $include = explode(',', $include);
         
         // Exclude specified files/folders if set
-        if($exclude)
+        if( $exclude )
         {
+            // remove whitespace
             $exclude = preg_replace('/\s+/', '', $exclude);
+
+            // convert to array
             $exclude = explode(',', $exclude);
             
+            // Removes file from file list if is found in the exclude list
             foreach($include as $includeKey => $includeValue) 
             {
                 foreach($exclude as $excludeKey => $excludeValue)
                 {
-                    if(strpos($includeValue, $excludeValue) !== false)
+                    if( strpos($includeValue, $excludeValue) !== false )
                     {
-                        unset($include[$includeKey]);
+                        unset( $include[$includeKey] );
                     }
                 }
             }
@@ -539,8 +516,8 @@ class __Assets{
 
         // define source: where the source files are
         $this->source = array(
-            'path'  => $this->dir_sys_path($out),
-            'www'   => $this->dir_www_path(str_replace($this->_root ,'', $out))
+            'path'  => $this->dir_sys_path($output),
+            'www'   => $this->dir_www_path(str_replace($this->_root ,'', $output))
         );
         
         // define output: where the ouput will be, after compiling
@@ -549,22 +526,38 @@ class __Assets{
             'www'  => $this->source['www'] . 'minified/',
             'name' => 'all.min' . '.' . $this->type
         );
+
+        if( $out !== null )
+        {
+            $this->output['path'] = $this->source['path'];
+            $this->output['www']  = $this->source['www'];
+        }
+
         
-        // Where the minified files will be, system & www paths
+        // Where the minified files will be, system & www paths include file modified time.
         $this->minified = array(
-            'time' => function($path, $name){
-                if( file_exists( $path . $name ) ){
+            // Get file modified time
+            'time' => function( $path, $name )
+            {
+                if( file_exists( $path . $name ) )
+                {
                     return filemtime( $path . $name );
-                }else{
+                }
+                else
+                {
                     return null;
                 }
             },
-                        
-            'path' => function($path, $name){
+            
+            // Get file directory path    
+            'path' => function( $path, $name )
+            {
                 return $path . $name;
             },
             
-            'www'  => function($www, $name){
+            // Get file www path
+            'www'  => function( $www, $name )
+            {
                 return $www . $name;
             }
         );
@@ -606,13 +599,14 @@ class __Assets{
          */
         if( $this->error )
         {
-            // render html template.
+            // render error.
             if( $return !== true )
             {
                 echo $this->error;
             }
             
-            return false;
+            // return error.
+            return $this->error;
         }
         
         else
@@ -670,5 +664,19 @@ function assets(
 )
 {    
     $helpers = new __Assets();
+
+    if( is_array($dir) )
+    {
+        $args    = $dir;
+
+        $dir     = ( isset($args['directory']) ) ? $args['directory'] : '';
+        $include = ( isset($args['include']) )   ? $args['include']   : 'all';
+        $exclude = ( isset($args['exclude']) )   ? $args['exclude']   : null;
+        $out     = ( isset($args['output']) )    ? $args['output']    : null;
+        $minify  = ( isset($args['minify']) )    ? $args['minify']    : true;
+        $refresh = ( isset($args['refresh']) )   ? $args['refresh']   : false;
+        $return  = ( isset($args['return']) )    ? $args['return']    : null;
+    }
+
     return $helpers->assets($dir, $include, $exclude, $out, $minify, $refresh, $return);
 }
