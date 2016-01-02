@@ -668,7 +668,6 @@ function assets(
     if( is_array($dir) )
     {
         $args    = $dir;
-
         $dir     = ( isset($args['directory']) ) ? $args['directory'] : '';
         $include = ( isset($args['include']) )   ? $args['include']   : 'all';
         $exclude = ( isset($args['exclude']) )   ? $args['exclude']   : null;
