@@ -11,7 +11,8 @@ class __Assets{
             $error, 
             $type,
             $env,
-            $bin;
+            $bin,
+            $all;
 
     public function __construct() 
     {
@@ -132,9 +133,15 @@ class __Assets{
     private function _sass($input)
     {
         $import_path = $this->_assets . $this->_type . $this->_ds;
-        $cmd         = 'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style  . ' --load-path ' . $import_path;
-
-        return $this->exec($cmd, $input); 
+        
+        if( !$this->all ){
+            $cmd         = $this->bin . 'sass-' . $this->getOS() . ' --style ' . $this->sass_output_style . ' --sourcemap ' . $input . ' ';
+            return $cmd;
+        }
+        else{
+            $cmd         = 'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style  . ' --load-path ' . $import_path . ' --sourcemap ';
+            return $this->exec($cmd, $input); 
+        }
     }
 
     /**
@@ -219,7 +226,6 @@ class __Assets{
                     $refresh['value'] = true;
                 }
             }
-            
         }
         
          // refresh? create/update file once every update
@@ -258,7 +264,12 @@ class __Assets{
                  */
                 if( $buffer['sass'] )
                 {
-                    $buffer['sass'] = $this->_sass( $buffer['sass'] );
+                    if( !$this->all ){
+                        $buffer['sass'] = $this->_sass( $include[0] );
+                    }
+                    else{
+                        $buffer['sass'] = $this->_sass( $buffer['sass'] );
+                    }
                 }
             }
             else
@@ -326,11 +337,18 @@ class __Assets{
                 $oldumask = umask(0);
                 
                 // Remove old files of same type
-                $mask = $output['path'].'*' . $this->type;
+                $mask = $output['path'].'*.' . $this->type . '*';
                 array_map('unlink', glob($mask));
-                
-                // Save new/updated minified file 'all.min.ext'
-                file_put_contents( $minified['path'], $buffer['minified'] );
+
+
+                if( !$this->all ){
+                    $cmd = $buffer['sass'] . $minified['path'];
+                    exec($cmd);
+                }
+                else{
+                    // Save new/updated minified file 'all.min.ext'
+                    file_put_contents( $minified['path'], $buffer['minified'] );
+                }
                 
                 //  Give 0777 permissions
                 @chmod($minified['path'], 0777);
@@ -429,6 +447,7 @@ class __Assets{
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
         {
+            $this->all = true;
             // Get all files in directory/sub directories recursive operation
             $rii   = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $this->_assets ) );
             $files = array();
