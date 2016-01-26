@@ -66,7 +66,9 @@ assets(array(
 
 	'output'    => null|string,
 	/* 
-	 * Where to save the output minified folder and all.min.css/js files
+	 * Where to save the output minified files i.e all.min.css/js
+	 * defaults to save in a minified folder created in the directory before 
+	 * the specified directory, i.e for '/assets/stylesheets/' it will be /assets/
 	 */
 
 	'minify'    => true|bool,
