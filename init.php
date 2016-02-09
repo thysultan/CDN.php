@@ -12,7 +12,8 @@ class __Assets{
             $type,
             $env,
             $bin,
-            $all;
+
+            $multi_file;
 
     public function __construct() 
     {
@@ -83,8 +84,6 @@ class __Assets{
      */
     private function exec($cmd, $input)
     {
-        $cmd = $this->bin . $cmd;
-
         // Add pipes to flow data
         $spec = array(
             0 => array('pipe','r'), // stdin
@@ -134,12 +133,17 @@ class __Assets{
     {
         $import_path = $this->_assets . $this->_type . $this->_ds;
         
-        if( !$this->all ){
+        /** 
+         * Don't use stdin if from a single entry point sass file(allows for source map generation)
+         */
+        if( !$this->multi_file )
+        {
             $cmd         = $this->bin . 'sass-' . $this->getOS() . ' --style ' . $this->sass_output_style . ' --sourcemap ' . $input . ' ';
             return $cmd;
         }
-        else{
-            $cmd         = 'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style  . ' --load-path ' . $import_path . ' --sourcemap ';
+        else
+        {
+            $cmd         = $this->bin . 'sass-' . $this->getOS() . ' --stdin --style ' . $this->sass_output_style  . ' --load-path ' . $import_path . ' --sourcemap ';
             return $this->exec($cmd, $input); 
         }
     }
@@ -264,10 +268,12 @@ class __Assets{
                  */
                 if( $buffer['sass'] )
                 {
-                    if( !$this->all ){
+                    if( !$this->multi_file )
+                    {
                         $buffer['sass'] = $this->_sass( $include[0] );
                     }
-                    else{
+                    else
+                    {
                         $buffer['sass'] = $this->_sass( $buffer['sass'] );
                     }
                 }
@@ -341,11 +347,24 @@ class __Assets{
                 array_map('unlink', glob($mask));
 
 
-                if( !$this->all ){
+                if( !$this->multi_file )
+                {
                     $cmd = $buffer['sass'] . $minified['path'];
-                    exec($cmd);
+
+                    exec($cmd . ' 2>&1', $execOutput);
+                    
+                    if( count($execOutput) === 0 )
+                    {
+                        $execOutput = null;
+                    }
+                    else
+                    {
+                        echo '<h1 style="color:red;font-family:monospace;">' . $execOutput[0] . '<br>' . $execOutput[1] . '<br>' . $execOutput[2] . '</h1>';
+                        exit;
+                    }
                 }
-                else{
+                else
+                {
                     // Save new/updated minified file 'all.min.ext'
                     file_put_contents( $minified['path'], $buffer['minified'] );
                 }
@@ -447,7 +466,8 @@ class __Assets{
         // include all files if 'all' or 'null': not set
         if( $include === 'all' || $include === null )
         {
-            $this->all = true;
+            $this->multi_file = true;
+
             // Get all files in directory/sub directories recursive operation
             $rii   = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $this->_assets ) );
             $files = array();
@@ -487,6 +507,15 @@ class __Assets{
         }
         else // else only specified files
         {
+            $test['files'] = explode(',', $include);
+            $test['ext']   = explode('.', $test['files'][0]);
+            $test['ext']   = $test['ext'][ count($test['ext']) - 1 ];
+
+            if( count($test['files']) !== 1 || $test['ext'] !== 'scss')
+            {
+                $this->multi_file = true;
+            }
+
             // remove whitespace
             $include = preg_replace('/\s+/', '', $include);
             
