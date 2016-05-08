@@ -292,7 +292,7 @@ class __Assets{
                     $contents  = file_get_contents( $value );
 
                     // If file minified don't run through compressor
-                    $buffer['minified'] .= ( $this->min === 'min' ) ? $contents : $this->_js( $value );
+                    $buffer['minified'] .= ( $this->min === 'min' || !!$minify === false ) ? $contents : $this->_js( $value );
                 }
             }
 
