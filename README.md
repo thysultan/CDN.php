@@ -2,9 +2,6 @@
 
 A fast assets manager, that takes a folder and delivers minified & combined assets per type(css/js), works with css &amp; js & .scss(sass). Essentially also a sass compiler.
 
-See for live useage: [sultantarimo.com](http://sultantarimo.com), [the code base](https://github.com/sultantarimo/Framework.php)
-
-
 ### Usage
 
 ```php
